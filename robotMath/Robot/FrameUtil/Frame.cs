@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace robotMath.Robot.FrameUtil
+namespace RobotMath.Robot.FrameUtil
 {
     public class Frame
     {

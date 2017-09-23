@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Text;
-using robotMath.Robot.FrameUtil;
+using RobotMath.Robot.FrameUtil;
 
 namespace RobotMath.Robot.FrameUtil
 {

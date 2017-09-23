@@ -4,14 +4,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using robotMath.Robot.FrameUtil;
-using robotMath.Robot.PositionMatrices;
-using RobotMath.linearAlgebra;
-using RobotMath.positionMatrices;
-using RobotMath.Robot;
 using RobotMath.Robot.FrameUtil;
+using RobotMath.LinearAlgebra;
 
-namespace RobotMath.PositionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     public class HomogeneousTransformation : FrameTransformationMatrix
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace robotMath.Util
+namespace RobotMath.Util
 {
     interface PrettyPrintInterface
     {

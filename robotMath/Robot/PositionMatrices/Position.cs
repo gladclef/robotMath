@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.linearAlgebra;
+using RobotMath.LinearAlgebra;
 
-namespace RobotMath.PositionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     public class Position : Vector
     {

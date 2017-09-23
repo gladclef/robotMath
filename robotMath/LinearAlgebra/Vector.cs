@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RobotMath.linearAlgebra
+namespace RobotMath.LinearAlgebra
 {
     public class Vector : Matrix
     {

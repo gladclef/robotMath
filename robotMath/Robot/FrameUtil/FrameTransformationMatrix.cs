@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using robotMath.Util;
-using RobotMath.linearAlgebra;
+using RobotMath.Util;
+using RobotMath.LinearAlgebra;
 using RobotMath.Robot.FrameUtil;
 
-namespace robotMath.Robot.FrameUtil
+namespace RobotMath.Robot.FrameUtil
 {
     public class FrameTransformationMatrix : Matrix, IFrameTransformation, PrettyPrintInterface
     {

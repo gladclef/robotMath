@@ -1,4 +1,4 @@
-﻿namespace RobotMath.Orientation
+﻿namespace RobotMath.Robot.PositionMatrices
 {
     public enum CartesianDimension
     {

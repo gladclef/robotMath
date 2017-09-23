@@ -1,10 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using robotMath.Robot.FrameUtil;
-using robotMath.Robot.PositionMatrices;
-using RobotMath.Orientation;
-using RobotMath.positionMatrices;
-using RobotMath.PositionMatrices;
+using RobotMath.Robot.FrameUtil;
 
 namespace RobotMath.Robot.PositionMatrices
 {

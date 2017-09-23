@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using robotMath.Util;
-using RobotMath.linearAlgebra;
+using RobotMath.Util;
+using RobotMath.LinearAlgebra;
 using RobotMath.PositionMatrices;
 using RobotMath.Robot.FrameUtil;
 
-namespace robotMath.Robot.FrameUtil
+namespace RobotMath.Robot.FrameUtil
 {
     public abstract class FrameTransformationPosition : Position, IFrameTransformation, PrettyPrintInterface
     {

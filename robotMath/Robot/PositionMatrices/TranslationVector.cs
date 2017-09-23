@@ -1,9 +1,8 @@
 ﻿using System;
-using robotMath.Robot.FrameUtil;
-using RobotMath.linearAlgebra;
 using RobotMath.Robot.FrameUtil;
+using RobotMath.LinearAlgebra;
 
-namespace robotMath.Robot.PositionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     public class TranslationVector : FrameTransformationPosition
     {

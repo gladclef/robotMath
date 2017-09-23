@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Text;
-using robotMath.Robot.FrameUtil;
-using RobotMath.linearAlgebra;
-using RobotMath.Orientation;
-using RobotMath.Robot;
 using RobotMath.Robot.FrameUtil;
+using RobotMath.LinearAlgebra;
 
-namespace RobotMath.positionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     public class RotationMatrix : FrameTransformationMatrix
     {
