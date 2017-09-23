@@ -5,12 +5,8 @@ using RobotMath.Robot.FrameUtil;
 
 namespace robotMath.Robot.PositionMatrices
 {
-    public class TranslationVector : FrameTransformationVector
+    public class TranslationVector : FrameTransformationPosition
     {
-        public double X => this[0, 0];
-        public double Y => (Rows == 1 ? this[0, 1] : this[1, 0]);
-        public double Z => (Rows == 1 ? this[0, 2] : this[2, 0]);
-
         public TranslationVector(Matrix values) : this(values.Values, null, null)
         {
         }
