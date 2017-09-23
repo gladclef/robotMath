@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RobotMath.Util
 {
-    interface PrettyPrintInterface
+    interface IPrettyPrint
     {
         string PrettyPrint();
     }

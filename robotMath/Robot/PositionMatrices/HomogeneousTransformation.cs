@@ -11,7 +11,7 @@ namespace RobotMath.Robot.PositionMatrices
 {
     public class HomogeneousTransformation : FrameTransformationMatrix
     {
-        public static Vector BottomRowVector = new Vector(new double[,] { { 0, 0, 0, 1 } });
+        public static FrameTransformationVector BottomRowVector = new FrameTransformationVector(new double[,] { { 0, 0, 0, 1 } }, null, null);
         
         public RotationMatrix RotationMatrix { get; }
         public TranslationVector TranslationVector { get; }

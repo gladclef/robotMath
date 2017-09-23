@@ -47,18 +47,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LinearAlgebra\Matrix.cs" />
-    <Compile Include="LinearAlgebra\Vector.cs" />
+    <Compile Include="LinearAlgebra\IVector.cs" />
+    <Compile Include="Robot\FrameUtil\FrameTransformationVector.cs" />
+    <Compile Include="Robot\FrameUtil\FrameTransformationPosition.cs" />
     <Compile Include="Robot\PositionMatrices\CartesianDimension.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformation.cs" />
     <Compile Include="Robot\PositionMatrices\HomogeneousTransformation.cs" />
     <Compile Include="Robot\PositionMatrices\TranslationVector.cs" />
     <Compile Include="Robot\PositionMatrices\RadialDimension.cs" />
     <Compile Include="Robot\PositionMatrices\RotationMatrix.cs" />
-    <Compile Include="Robot\PositionMatrices\Position.cs" />
+    <Compile Include="Robot\PositionMatrices\IPosition.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Robot\FrameUtil\Frame.cs" />
-    <Compile Include="Robot\FrameUtil\FrameTransformationVector.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformationMatrix.cs" />
     <Compile Include="Util\PrettyPrintInterface.cs" />
   </ItemGroup>

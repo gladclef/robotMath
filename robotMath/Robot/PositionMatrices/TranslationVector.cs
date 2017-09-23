@@ -24,11 +24,6 @@ namespace RobotMath.Robot.PositionMatrices
 
         public TranslationVector(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
-            if ((values.GetLength(0) != 1 && values.GetLength(1) != 1) ||
-                (values.GetLength(0) != 3 && values.GetLength(1) != 3))
-            {
-                throw new ArgumentOutOfRangeException(nameof(values), "must be a 1x3 or 3x1 matrix");
-            }
         }
 
         public TranslationVector Sum(TranslationVector other)

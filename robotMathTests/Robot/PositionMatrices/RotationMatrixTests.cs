@@ -1,8 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RobotMath.positionMatrices;
-using RobotMath.linearAlgebra;
-using RobotMath.Orientation;
+using RobotMath.LinearAlgebra;
 
 namespace RobotMath.Robot.PositionMatrices
 {

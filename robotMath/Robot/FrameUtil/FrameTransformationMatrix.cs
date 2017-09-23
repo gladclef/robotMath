@@ -9,7 +9,7 @@ using RobotMath.Robot.FrameUtil;
 
 namespace RobotMath.Robot.FrameUtil
 {
-    public class FrameTransformationMatrix : Matrix, IFrameTransformation, PrettyPrintInterface
+    public class FrameTransformationMatrix : Matrix, IFrameTransformation, IPrettyPrint
     {
         private readonly FrameTransformationHelper fth;
         public Frame BaseFrame => fth.BaseFrame;

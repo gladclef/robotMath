@@ -18,10 +18,10 @@ namespace RobotMath.Robot.PositionMatrices
             HomogeneousTransformation originalTransformation = new HomogeneousTransformation(rotationMatrix);
             TranslationVector translation = new TranslationVector(new double[,] { { 1, 0, 0 } }, b, c);
             HomogeneousTransformation result = originalTransformation.TranslateByCurrentOrientation(translation);
-
+            
             TranslationVector expectedOrigin = new TranslationVector(new double[,] { { 0, 1, 0 } }, a, c).Transform();
             RotationMatrix expectedRotation = new RotationMatrix(rotationMatrix, a, c);
-            expectedOrigin.Equals(result.TranslationVector);
+            expectedOrigin.Equals(result.RotationMatrix);
             Assert.AreEqual(expectedOrigin, result.TranslationVector);
             Assert.AreEqual(new HomogeneousTransformation(expectedRotation, expectedOrigin), result);
         }

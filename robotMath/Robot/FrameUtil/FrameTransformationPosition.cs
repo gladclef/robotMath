@@ -5,79 +5,45 @@ using System.Text;
 using System.Threading.Tasks;
 using RobotMath.Util;
 using RobotMath.LinearAlgebra;
-using RobotMath.PositionMatrices;
-using RobotMath.Robot.FrameUtil;
+using RobotMath.Robot.PositionMatrices;
 
 namespace RobotMath.Robot.FrameUtil
 {
-    public abstract class FrameTransformationPosition : Position, IFrameTransformation, PrettyPrintInterface
+    public class FrameTransformationPosition : FrameTransformationVector, IPosition
     {
-        public readonly FrameTransformationHelper fth;
-        public Frame BaseFrame => fth.BaseFrame;
-        public Frame ToFrame => fth.ToFrame;
+        public double X => this[0];
+        public double Y => this[1];
+        public double Z => this[2];
 
-        protected FrameTransformationPosition(double[,] values, Frame baseFrame, Frame toFrame) : base(values)
+        public FrameTransformationPosition(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
-            fth = new FrameTransformationHelper(baseFrame, toFrame);
+            CheckValidDimensions(values.GetLength(0), values.GetLength(1));
         }
 
-        protected FrameTransformationPosition(Matrix values, Frame baseFrame, Frame toFrame) : base(values.Values)
-        {
-            fth = new FrameTransformationHelper(baseFrame, toFrame);
-        }
-
-        protected FrameTransformationPosition(FrameTransformationMatrix values) : this(values, values.BaseFrame, values.ToFrame)
+        public FrameTransformationPosition(Matrix values, Frame baseFrame, Frame toFrame) : this(values.Values, null, null)
         {
         }
 
-        public void FrameEqualityCheck(IFrameTransformation other)
+        public FrameTransformationPosition(FrameTransformationPosition values) : this(values, values.BaseFrame, values.ToFrame)
         {
-            fth.FrameEqualityCheck(other);
         }
 
-        public void FrameTransitionCheck(IFrameTransformation other)
+        public FrameTransformationPosition DotProduct(FrameTransformationPosition other)
         {
-            fth.FrameTransitionCheck(other);
+            return new FrameTransformationPosition(base.DotProduct(other), BaseFrame, other.ToFrame);
         }
 
-        public FrameTransformationMatrix DotProduct(FrameTransformationMatrix other)
+        public FrameTransformationPosition Sum(FrameTransformationPosition other)
         {
-            FrameTransitionCheck(other);
-            return new FrameTransformationMatrix(base.DotProduct(other), BaseFrame, other.ToFrame);
+            return new FrameTransformationPosition(base.Sum(other), BaseFrame, other.ToFrame);
         }
 
-        public FrameTransformationMatrix Sum(FrameTransformationMatrix other)
+        public void CheckValidDimensions(int rows, int cols)
         {
-            FrameTransitionCheck(other);
-            return new FrameTransformationMatrix(base.Sum(other), BaseFrame, other.ToFrame);
-        }
-
-        public override string ToString()
-        {
-            StringBuilder retval = new StringBuilder();
-            fth.ToString(retval);
-            retval.Append(base.ToString());
-            return retval.ToString();
-        }
-
-        public new string PrettyPrint()
-        {
-            StringBuilder retval = new StringBuilder();
-            fth.PrettyPrint(retval);
-            retval.Append(base.ToString());
-            return retval.ToString();
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode()
-                   ^ fth.GetHashCode();
-        }
-
-        public override bool Equals(object o)
-        {
-            return fth.Equals((IFrameTransformation)o) &&
-                base.Equals(o);
+            if (rows != 3 && cols != 3)
+            {
+                throw new ArgumentOutOfRangeException("values", "the dimensions of this vector must be either 1x3 or 3x1");
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ using RobotMath.Util;
 
 namespace RobotMath.LinearAlgebra
 {
-    public class Matrix : PrettyPrintInterface
+    public class Matrix : IPrettyPrint
     {
         internal readonly double[,] Values;
 
