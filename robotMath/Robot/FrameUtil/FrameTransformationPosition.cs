@@ -5,27 +5,28 @@ using System.Text;
 using System.Threading.Tasks;
 using robotMath.Util;
 using RobotMath.linearAlgebra;
+using RobotMath.PositionMatrices;
 using RobotMath.Robot.FrameUtil;
 
 namespace robotMath.Robot.FrameUtil
 {
-    public abstract class FrameTransformationVector : Vector, IFrameTransformation, PrettyPrintInterface
+    public abstract class FrameTransformationPosition : Position, IFrameTransformation, PrettyPrintInterface
     {
         public readonly FrameTransformationHelper fth;
         public Frame BaseFrame => fth.BaseFrame;
         public Frame ToFrame => fth.ToFrame;
 
-        protected FrameTransformationVector(double[,] values, Frame baseFrame, Frame toFrame) : base(values)
+        protected FrameTransformationPosition(double[,] values, Frame baseFrame, Frame toFrame) : base(values)
         {
             fth = new FrameTransformationHelper(baseFrame, toFrame);
         }
 
-        protected FrameTransformationVector(Matrix values, Frame baseFrame, Frame toFrame) : base(values.Values)
+        protected FrameTransformationPosition(Matrix values, Frame baseFrame, Frame toFrame) : base(values.Values)
         {
             fth = new FrameTransformationHelper(baseFrame, toFrame);
         }
 
-        protected FrameTransformationVector(FrameTransformationMatrix values) : this(values, values.BaseFrame, values.ToFrame)
+        protected FrameTransformationPosition(FrameTransformationMatrix values) : this(values, values.BaseFrame, values.ToFrame)
         {
         }
 
