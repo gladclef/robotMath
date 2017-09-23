@@ -6,7 +6,7 @@ using RobotMath.Orientation;
 using RobotMath.positionMatrices;
 using RobotMath.PositionMatrices;
 
-namespace RobotMathTests.PositionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     [TestClass()]
     public class HomogeneousTransformationTests

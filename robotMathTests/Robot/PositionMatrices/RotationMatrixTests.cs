@@ -4,7 +4,7 @@ using RobotMath.positionMatrices;
 using RobotMath.linearAlgebra;
 using RobotMath.Orientation;
 
-namespace RobotMathTests.PositionMatrices
+namespace RobotMath.Robot.PositionMatrices
 {
     [TestClass()]
     public class RotationMatrixTests
