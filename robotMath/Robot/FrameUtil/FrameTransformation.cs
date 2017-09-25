@@ -132,7 +132,7 @@ namespace RobotMath.Robot.FrameUtil
             if (!ToFrame.Equals(nextFrame.BaseFrame))
             if (!ToFrame.Equals(nextFrame.BaseFrame))
             {
-                throw new ArgumentException("the to frame of this frame must the same as the base of the frame transformation, but are " +
+                throw new ArgumentException("the to frame of this frame must the same as the base of the frame transformation, but are \"" +
                     ToFrame + "\" and \"" + nextFrame.BaseFrame + "\"", nameof(nextFrame));
             }
         }

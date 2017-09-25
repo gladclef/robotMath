@@ -109,7 +109,8 @@ namespace RobotMath.Robot.PositionMatrices
         {
             HomogeneousTransformation transHT = new HomogeneousTransformation(translation);
             TranslationVector relTranslation = this.DotProduct(transHT).TranslationVector;
-            return new HomogeneousTransformation(RotationMatrix, relTranslation + TranslationVector, BaseFrame, translation.ToFrame);
+            relTranslation = new TranslationVector(relTranslation, TranslationVector.ToFrame, relTranslation.ToFrame);
+            return new HomogeneousTransformation(RotationMatrix, TranslationVector + relTranslation, BaseFrame, translation.ToFrame);
         }
 
         public HomogeneousTransformation Rotate(RotationMatrix rotation)
