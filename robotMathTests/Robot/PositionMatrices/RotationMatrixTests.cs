@@ -1,8 +1,9 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RobotMath.LinearAlgebra;
+using RobotMath.Robot.PositionMatrices;
 
-namespace RobotMath.Robot.PositionMatrices
+namespace robotMathTests.Robot.PositionMatrices
 {
     [TestClass()]
     public class RotationMatrixTests

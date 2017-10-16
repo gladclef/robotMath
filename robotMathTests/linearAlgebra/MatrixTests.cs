@@ -1,11 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RobotMath.LinearAlgebra;
 
-namespace RobotMath.LinearAlgebra
+namespace robotMathTests.LinearAlgebra
 {
     [TestClass()]
     public class MatrixTests
