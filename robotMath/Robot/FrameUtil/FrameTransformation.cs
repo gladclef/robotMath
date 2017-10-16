@@ -93,6 +93,11 @@ namespace RobotMath.Robot.FrameUtil
             }
         }
 
+        public override int GetHashCode()
+        {
+            return BaseFrame.GetHashCode() ^ ToFrame.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             if (!(obj is IFrameTransformation))

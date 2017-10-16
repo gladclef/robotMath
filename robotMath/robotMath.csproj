@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expression\ExpressionTreeHelper.cs" />
+    <Compile Include="Expression\GeneratedExpressionParser.cs" />
+    <Compile Include="Expression\GeneratedExpressionScanner.cs" />
     <Compile Include="LinearAlgebra\Matrix.cs" />
     <Compile Include="LinearAlgebra\IVector.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformationVector.cs" />
@@ -68,13 +71,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Expression\ExpressionParser.y" />
     <None Include="Expression\ExpressionScanner.lex" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Expression\Build\" />
     <Folder Include="IncludedReferences\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

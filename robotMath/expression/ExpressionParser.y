@@ -7,12 +7,11 @@
  *  The parser class is declared %partial, so that the bulk of
  *  the code can be placed in the separate file RealTreeHelper.cs
  *
- *  Process with > gppg /nolines RealTree.y
+ *  Process with > "Gppg.exe /nolines /gplex ExpressionParser.y" from the same directory.
  */
 
-%using Scanner
-%output=Build/ExpressionParser.cs
-%namespace Parser
+%output=GeneratedExpressionParser.cs
+%namespace robotMath.Expression
 %partial
 //%sharetokens
 //%start list
@@ -21,8 +20,8 @@
 %scanbasetype ScanBase  //names the ScanBaseclass to "ScanBase"
 %tokentype Tokens       //names the Tokensenumeration to "Tokens"
 
-%token ID //the received Tokens from GPLEX
-%token float, int
+%token Identifier, sym, lParen, rParent //the received Tokens from GPLEX
+%token floatVal, intVal
 
 /*
  * The accessibility of the Parser object must not exceed that
@@ -36,7 +35,7 @@
 
 %visibility public
 
-%YYSTYPE ExpressionTree.Node
+%YYSTYPE Object
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -46,19 +45,17 @@
 %%
 
 expr
-	: Identifier '(' expr ')'   { $$ = MakeIdentifier($1, $3); }
-	| '(' expr ')'		        { $$ = $2; }
-	|  expr '^' expr            { $$ = MakeBinary(NodeTag.exp, $1, $3); }
-    |  expr '*' expr	        { $$ = MakeBinary(NodeTag.mul, $1, $3); }
-	|  expr '/' expr	        { $$ = MakeBinary(NodeTag.div, $1, $3); }
-	|  expr '%' expr	        { $$ = MakeBinary(NodeTag.rem, $1, $3); }
-	|  expr '+' expr	        { $$ = MakeBinary(NodeTag.plus, $1, $3); }
-	|  expr '-' expr	        { $$ = MakeBinary(NodeTag.minus, $1, $3); }
-	|  int                      // $$ is automatically lexer.yylval
-	|  float                    // $$ is automatically lexer.yylval
-	|  '-' expr %prec UMINUS {
-				$$ = MakeUnary(NodeTag.negate, $2);
-			}
+	: Identifier '(' expr ',' expr ')'   { $$ = MakeIdentifierOp(  GetText(),  (Node) $3,  (Node) $5); }
+	| Identifier '(' expr ')'            { $$ = MakeIdentifierOp(  GetText(),  (Node) $3); }
+	| '(' expr ')'                       { $$ = (Node) $2; }
+	| expr op expr                       { $$ = MakeBinary(    (NodeTag) $2,  (Node) $1,  (Node) $3  ); }
+	| intVal                             { $$ = MakeConstLeaf( Convert.ToUInt64(GetText()) ); }
+	| floatVal                           { $$ = MakeConstLeaf( Convert.ToDouble(GetText()) ); }
+	| Identifier                         { $$ = MakeIdLeaf(    (String) $1 ); }
+	;
+
+op
+	: sym  { $$ = GetNodeTag( GetText() ); }
 	;
 
 %%

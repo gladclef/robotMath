@@ -36,6 +36,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="QUT.ShiftReduceParser">
+      <HintPath>..\robotMath\IncludedReferences\QUT.ShiftReduceParser.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -51,6 +54,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Expression\ParserTests.cs" />
     <Compile Include="Robot\PositionMatrices\HomogeneousTransformationTests.cs" />
     <Compile Include="Robot\PositionMatrices\RotationMatrixTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -58,11 +62,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\robotMath\robotMath.csproj">
-      <Project>{B604D318-95AF-45B2-BCBA-116B2CD862E5}</Project>
+      <Project>{b604d318-95af-45b2-bcba-116b2cd862e5}</Project>
       <Name>robotMath</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  DESKTOP-35739GI
-//  DateTime: 10/14/2017 7:21:11 PM
+//  DateTime: 10/15/2017 9:47:47 PM
 //  UserName: gladc
-//  GPLEX input file <ExpressionScanner.lex - 10/14/2017 7:21:10 PM>
+//  GPLEX input file <ExpressionScanner.lex - 10/15/2017 9:47:43 PM>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: verbose, parser, minimize
@@ -25,14 +25,15 @@
 #define BYTEMODE
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Text;
+using System.Globalization;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
-namespace robotMath.Expression.Build
+
+namespace robotMath.Expression
 {   
     /// <summary>
     /// Summary Canonical example of GPLEX automaton
@@ -123,8 +124,8 @@ namespace robotMath.Expression.Build
         
         enum Result {accept, noMatch, contextFound};
 
-        const int maxAccept = 4;
-        const int initial = 5;
+        const int maxAccept = 5;
+        const int initial = 6;
         const int eofNum = 0;
         const int goStart = -1;
         const int INITIAL = 0;
@@ -164,49 +165,51 @@ namespace robotMath.Expression.Build
         }
     };
 
-    static int[] startState = new int[] {5, 0};
+    static int[] startState = new int[] {6, 0};
 
-    static Table[] NxS = new Table[9] {
+    static Table[] NxS = new Table[10] {
 /* NxS[   0] */ new Table(0, 0, 0, null), // Shortest string ""
-/* NxS[   1] */ // Shortest string "0"
-      new Table(10, 48, 6, new sbyte[] {-1, 6, 6, 6, 6, 6, 
-          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 8, 6, 6, 6, 
-          1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
-/* NxS[   2] */ // Shortest string "A"
-      new Table(44, 79, -1, new sbyte[] {7, -1, -1, -1, 3, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, -1, -1, -1, -1, -1, -1, -1, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3, -1, -1, -1, -1, 3, -1, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3}),
-/* NxS[   3] */ // Shortest string "A0"
-      new Table(48, 75, -1, new sbyte[] {3, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, -1, -1, -1, -1, -1, -1, -1, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3, -1, -1, -1, -1, 3, -1, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
-          3, 3, 3, 3, 3}),
-/* NxS[   4] */ // Shortest string "\x01,0"
-      new Table(48, 10, -1, new sbyte[] {4, 4, 4, 4, 4, 4, 
-          4, 4, 4, 4}),
-/* NxS[   5] */ // Shortest string ""
-      new Table(10, 113, 6, new sbyte[] {-1, 6, 6, 6, 6, 6, 
-          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
-          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 
-          6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
-          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 6, 6, 6, 2, 
-          6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
-          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}),
-/* NxS[   6] */ // Shortest string "\x01"
-      new Table(44, 1, -1, new sbyte[] {7}),
-/* NxS[   7] */ // Shortest string "\x01,"
-      new Table(48, 10, -1, new sbyte[] {4, 4, 4, 4, 4, 4, 
-          4, 4, 4, 4}),
-/* NxS[   8] */ // Shortest string "0,"
-      new Table(44, 14, -1, new sbyte[] {7, -1, -1, -1, 4, 4, 
-          4, 4, 4, 4, 4, 4, 4, 4}),
+/* NxS[   1] */ // Shortest string "%"
+      new Table(44, 1, -1, new sbyte[] {8}),
+/* NxS[   2] */ // Shortest string "0"
+      new Table(10, 48, 7, new sbyte[] {-1, 7, 7, 7, 7, 7, 
+          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 9, 7, 7, 7, 
+          2, 2, 2, 2, 2, 2, 2, 2, 2, 2}),
+/* NxS[   3] */ // Shortest string "A"
+      new Table(44, 79, -1, new sbyte[] {8, -1, -1, -1, 4, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, -1, -1, -1, -1, -1, -1, -1, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4, -1, -1, -1, -1, 4, -1, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4}),
+/* NxS[   4] */ // Shortest string "A0"
+      new Table(48, 75, -1, new sbyte[] {4, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, -1, -1, -1, -1, -1, -1, -1, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4, -1, -1, -1, -1, 4, -1, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 
+          4, 4, 4, 4, 4}),
+/* NxS[   5] */ // Shortest string "\x01,0"
+      new Table(48, 10, -1, new sbyte[] {5, 5, 5, 5, 5, 5, 
+          5, 5, 5, 5}),
+/* NxS[   6] */ // Shortest string ""
+      new Table(10, 113, 7, new sbyte[] {-1, 7, 7, 7, 7, 7, 
+          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+          7, 7, 7, 7, 7, 1, 7, 7, 7, 7, 1, 1, 1, 1, 1, 1, 
+          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 
+          1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
+          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 7, 1, 3, 
+          7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
+          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}),
+/* NxS[   7] */ // Shortest string "\x01"
+      new Table(44, 1, -1, new sbyte[] {8}),
+/* NxS[   8] */ // Shortest string "\x01,"
+      new Table(48, 10, -1, new sbyte[] {5, 5, 5, 5, 5, 5, 
+          5, 5, 5, 5}),
+/* NxS[   9] */ // Shortest string "0,"
+      new Table(44, 14, -1, new sbyte[] {8, -1, -1, -1, 5, 5, 
+          5, 5, 5, 5, 5, 5, 5, 5}),
     };
 
 int NextState() {
@@ -634,15 +637,18 @@ int NextState() {
             if (yywrap())
                 return (int)Tokens.EOF;
             break;
-        case 1: // Recognized '{intVal}',	Shortest string "0"
-return (int)Tokens.intVal
+        case 1: // Recognized '{sym}',	Shortest string "%"
+            return (int) Tokens.sym;
             break;
-        case 2: // Recognized '{Identifier}',	Shortest string "A"
-        case 3: // Recognized '{Identifier}',	Shortest string "A0"
-yylval = yytext; return (int)Tokens.ID;
+        case 2: // Recognized '{intVal}',	Shortest string "0"
+            return (int) Tokens.intVal;
             break;
-        case 4: // Recognized '{floatVal}',	Shortest string "\x01,0"
-return (int)Tokens.floatVal
+        case 3: // Recognized '{Identifier}',	Shortest string "A"
+        case 4: // Recognized '{Identifier}',	Shortest string "A0"
+            yylval = yytext; return (int)Tokens.Identifier;
+            break;
+        case 5: // Recognized '{floatVal}',	Shortest string "\x01,0"
+            return (int) Tokens.floatVal;
             break;
         default:
             break;
@@ -703,35 +709,39 @@ return (int)Tokens.floatVal
         
 #region UserCodeSection
 
-public static void Main(string[] argp)
-{
-	if (argp.Length == 0)
-	{
-		Console.WriteLine("Usage: strings filename(s), (wildcards ok)");
-	}
-	DirectoryInfo dirInfo = new DirectoryInfo(".");
-	for (int i = 0; i < argp.Length; i++)
-	{
-		string name = argp[i];
-		FileInfo[] fInfo = dirInfo.GetFiles(name);
-		foreach (FileInfo info in fInfo)
-		{
-			try {
-				int tok;
-				FileStream file = new FileStream(info.Name, FileMode.Open); 
-				Scanner scnr = new Scanner(file);
-				Console.WriteLine("File: " + info.Name);
-				do
-				{
-					tok = scnr.yylex();
-					Console.WriteLine("tok: " + tok);
-				} while (tok > (int)Tokens.EOF);
-			} catch (IOException) {
-				Console.WriteLine("File " + name + " not found");
-			}
-		}
-	}
-}
+/* commented out: no user defined code here
+ * user code instead comes from parser
+ * 
+ * public static void Main(string[] argp)
+ * {
+ * 	if (argp.Length == 0)
+ * 	{
+ * 		Console.WriteLine("Usage: strings filename(s), (wildcards ok)");
+ * 	}
+ * 	DirectoryInfo dirInfo = new DirectoryInfo(".");
+ * 	for (int i = 0; i < argp.Length; i++)
+ * 	{
+ * 		string name = argp[i];
+ * 		FileInfo[] fInfo = dirInfo.GetFiles(name);
+ * 		foreach (FileInfo info in fInfo)
+ * 		{
+ * 			try {
+ * 				int tok;
+ * 				FileStream file = new FileStream(info.Name, FileMode.Open); 
+ * 				Scanner scnr = new Scanner(file);
+ * 				Console.WriteLine("File: " + info.Name);
+ * 				do
+ * 				{
+ * 					tok = scnr.yylex();
+ * 					Console.WriteLine("tok: " + tok);
+ * 				} while (tok > (int)Tokens.EOF);
+ * 			} catch (IOException) {
+ * 				Console.WriteLine("File " + name + " not found");
+ * 			}
+ * 		}
+ * 	}
+ * }
+ */
 
 #endregion
     } // end class $Scanner
