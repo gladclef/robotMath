@@ -35,7 +35,8 @@ namespace robotMath.Expression {
     {
         private AbstractScanner<Object, LexLocation> scanner;
 
-        internal Dictionary<Node, double> Vars = new Dictionary<Node, double>();
+        internal Dictionary<string, Node> Vars = new Dictionary<string, Node>();
+        internal Dictionary<Node, double> VarVals = new Dictionary<Node, double>();
         internal HashSet<Node> VarsWithValues = new HashSet<Node>();
         public Node Root { get; private set; }
         public String LastSym { get; }
@@ -45,7 +46,7 @@ namespace robotMath.Expression {
         // Most applications will have a parser type with other
         // fields such as error handlers etc.  Here is a minimal
         // version that just adds the default scanner object.
-        // 
+        //
 
         public Parser( AbstractScanner<Object, LexLocation> scanner ) : base(scanner)
         {
@@ -86,10 +87,52 @@ namespace robotMath.Expression {
 
         public Node MakeBinary(String op, Node lhs, Node rhs)
         {
-            NodeTag opTag = Binary.getTag(op);
-            Node retval = new Binary(this, opTag, lhs, rhs);
-            RegisterNode(retval);
-            return retval;
+            return MakeBinary(Binary.getTag(op), lhs, rhs);
+        }
+
+        public Node m(string op, double l, double r)
+        {
+            return MakeBinary(op, m(l), m(r));
+        }
+
+        public Node m(string op, string l, double r)
+        {
+            return MakeBinary(op, m(l), m(r));
+        }
+
+        public Node m(string op, double l, string r)
+        {
+            return MakeBinary(op, m(l), m(r));
+        }
+
+        public Node m(string op, string l, string r)
+        {
+            return MakeBinary(op, m(l), m(r));
+        }
+
+        public Node m(string op, Node l, double r)
+        {
+            return MakeBinary(op, l, m(r));
+        }
+
+        public Node m(string op, Node l, string r)
+        {
+            return MakeBinary(op, l, m(r));
+        }
+
+        public Node m(string op, double l, Node r)
+        {
+            return MakeBinary(op, m(l), r);
+        }
+
+        public Node m(string op, string l, Node r)
+        {
+            return MakeBinary(op, m(l), r);
+        }
+
+        public Node m(string op, Node l, Node r)
+        {
+            return MakeBinary(op, l, r);
         }
 
         public Node MakeUnary(NodeTag tag, Node child) {
@@ -98,17 +141,51 @@ namespace robotMath.Expression {
             return retval;
         }
 
-        public Node MakeIdLeaf(string n) {
+        public Node MakeUnary(string op, Node child)
+        {
+            return MakeUnary(Unary.getTag(op), child);
+        }
+
+        public Node m(string op, double child)
+        {
+            return MakeUnary(op, m(child));
+        }
+
+        public Node m(string op, string child)
+        {
+            return MakeUnary(op, m(child));
+        }
+
+        public Node m(string op, Node child)
+        {
+            return MakeUnary(op, child);
+        }
+
+        public Node MakeLeaf(string n) {
+            if (Vars.ContainsKey(n))
+            {
+                return Vars[n];
+            }
             Leaf retval = new Leaf( this, n );
-            Vars.Add(retval, 0);
+            VarVals.Add(retval, 0);
             RegisterNode(retval);
             return retval;
         }
 
-        public Node MakeConstLeaf(double v) {
+        public Node MakeLeaf(double v) {
             Node retval = new Leaf( this, v);
             RegisterNode(retval);
             return retval;
+        }
+
+        public Node m(string n)
+        {
+            return MakeLeaf(n);
+        }
+
+        public Node m(double v)
+        {
+            return MakeLeaf(v);
         }
 
         public Node MakeIdentifierOp(String name, Node lhs, Node rhs)
@@ -189,17 +266,19 @@ namespace robotMath.Expression {
         public abstract string Unparse();
     }
 
-    internal class Leaf : Node {
+    public class Leaf : Node {
         public String Name { get; }
         public double Value { get; set; }
 
         internal Leaf(Parser tree, String name) : base(tree, NodeTag.name)
         {
             this.Name = name;
+            this.Value = 0;
         }
 
         internal Leaf(Parser tree, double value) : base(tree, NodeTag.literal)
         {
+            this.Name = "";
             this.Value = value;
         }
 
@@ -220,9 +299,38 @@ namespace robotMath.Expression {
             else
                 return this.Value.ToString(CultureInfo.CurrentCulture);
         }
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            Leaf o = (Leaf)obj;
+            if (this.Tag != o.Tag)
+            {
+                return false;
+            }
+
+            if (this.Tag == NodeTag.name)
+            {
+                return this.Name.Equals(o.Name);
+            }
+            return Math.Abs(this.Value - o.Value) < 0.0000001;
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            return Tag.GetHashCode()
+                ^ Name.GetHashCode()
+                ^ Value.GetHashCode();
+        }
     }
 
-    internal class Unary : Node {
+    public class Unary : Node {
         public Node Child { get; }
         internal Unary(Parser tree, NodeTag tag, Node child )
             : base( tree, tag ) { this.Child = child; }
@@ -258,9 +366,24 @@ namespace robotMath.Expression {
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
         }
+
+        public static NodeTag getTag(string op)
+        {
+            switch (op)
+            {
+                case "-": return NodeTag.negate;
+                case "sin": return NodeTag.sin;
+                case "cos": return NodeTag.cos;
+                case "tan": return NodeTag.tan;
+                case "asin": return NodeTag.asin;
+                case "acos": return NodeTag.acos;
+                case "atan": return NodeTag.atan;
+                default: throw new Parser.BadOperatorException(op);
+            }
+        }
     }
 
-    internal class Binary : Node {
+    public class Binary : Node {
         public Node lhs { get; }
         public Node rhs { get; }
 

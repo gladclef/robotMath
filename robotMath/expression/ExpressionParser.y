@@ -49,9 +49,9 @@ expr
 	| Identifier '(' expr ')'            { $$ = MakeIdentifierOp(  GetText(),  (Node) $3); }
 	| '(' expr ')'                       { $$ = (Node) $2; }
 	| expr op expr                       { $$ = MakeBinary(    (NodeTag) $2,  (Node) $1,  (Node) $3  ); }
-	| intVal                             { $$ = MakeConstLeaf( Convert.ToUInt64(GetText()) ); }
-	| floatVal                           { $$ = MakeConstLeaf( Convert.ToDouble(GetText()) ); }
-	| Identifier                         { $$ = MakeIdLeaf(    (String) $1 ); }
+	| intVal                             { $$ = MakeLeaf( Convert.ToUInt64(GetText()) ); }
+	| floatVal                           { $$ = MakeLeaf( Convert.ToDouble(GetText()) ); }
+	| Identifier                         { $$ = MakeLeaf(    (String) $1 ); }
 	;
 
 op

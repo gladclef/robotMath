@@ -3,12 +3,12 @@
 // (see accompanying GPPGcopyright.rtf)
 
 // GPPG version 1.5.2
-// Machine:  DESKTOP-35739GI
-// DateTime: 10/15/2017 10:16:58 PM
+// Machine:  DESKTOP-D1RDMA5
+// DateTime: 10/22/2017 6:18:32 PM
 // UserName: gladc
-// Input file <ExpressionParser.y - 10/15/2017 10:16:56 PM>
+// Input file <ExpressionParser.y - 10/22/2017 5:21:10 PM>
 
-// options: conflicts no-lines gplex conflicts
+// options: no-lines gplex
 
 using System;
 using System.Collections.Generic;
@@ -111,13 +111,13 @@ public partial class Parser: ShiftReduceParser<Object, LexLocation>
 { CurrentSemanticValue = MakeBinary(    (NodeTag) ValueStack[ValueStack.Depth-2],  (Node) ValueStack[ValueStack.Depth-3],  (Node) ValueStack[ValueStack.Depth-1]  ); }
         break;
       case 6: // expr -> intVal
-{ CurrentSemanticValue = MakeConstLeaf( Convert.ToUInt64(GetText()) ); }
+{ CurrentSemanticValue = MakeLeaf( Convert.ToUInt64(GetText()) ); }
         break;
       case 7: // expr -> floatVal
-{ CurrentSemanticValue = MakeConstLeaf( Convert.ToDouble(GetText()) ); }
+{ CurrentSemanticValue = MakeLeaf( Convert.ToDouble(GetText()) ); }
         break;
       case 8: // expr -> Identifier
-{ CurrentSemanticValue = MakeIdLeaf(    (String) ValueStack[ValueStack.Depth-1] ); }
+{ CurrentSemanticValue = MakeLeaf(    (String) ValueStack[ValueStack.Depth-1] ); }
         break;
       case 9: // op -> sym
 { CurrentSemanticValue = GetNodeTag( GetText() ); }
