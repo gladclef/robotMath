@@ -55,6 +55,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Expression\ParserTests.cs" />
+    <Compile Include="Expression\SillyParserTests.cs" />
+    <Compile Include="ProgramTests.cs" />
     <Compile Include="Robot\PositionMatrices\HomogeneousTransformationTests.cs" />
     <Compile Include="Robot\PositionMatrices\RotationMatrixTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

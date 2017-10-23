@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.LinearAlgebra;
+using robotMath.LinearAlgebra;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.PositionMatrices
+namespace robotMath.Robot.PositionMatrices
 {
     public interface IPosition : IVector
     {
-        double X { get; }
-        double Y { get; }
-        double Z { get; }
+        Node X { get; }
+        Node Y { get; }
+        Node Z { get; }
 
         /// <summary>
         /// 

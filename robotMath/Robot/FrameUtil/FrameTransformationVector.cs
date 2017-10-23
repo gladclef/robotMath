@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.Util;
-using RobotMath.LinearAlgebra;
-using RobotMath.Robot.PositionMatrices;
+using robotMath.Util;
+using robotMath.LinearAlgebra;
+using robotMath.Robot.PositionMatrices;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.FrameUtil
+namespace robotMath.Robot.FrameUtil
 {
     public class FrameTransformationVector : FrameTransformationMatrix, IVector
     {
         public VectorHelper Helper { get; }
-        public double this[int a] => Helper[a];
+        public Node this[int a] => Helper[a];
 
-        public FrameTransformationVector(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
+        public FrameTransformationVector(Node[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
             Helper = new VectorHelper(this);
         }

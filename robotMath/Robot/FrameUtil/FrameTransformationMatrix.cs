@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.Util;
-using RobotMath.LinearAlgebra;
-using RobotMath.Robot.FrameUtil;
+using robotMath.Util;
+using robotMath.LinearAlgebra;
+using robotMath.Robot.FrameUtil;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.FrameUtil
+namespace robotMath.Robot.FrameUtil
 {
     public class FrameTransformationMatrix : Matrix, IFrameTransformation, IPrettyPrint
     {
@@ -15,7 +16,7 @@ namespace RobotMath.Robot.FrameUtil
         public Frame BaseFrame => fth.BaseFrame;
         public Frame ToFrame => fth.ToFrame;
 
-        public FrameTransformationMatrix(double[,] values, Frame baseFrame, Frame toFrame) : base(values)
+        public FrameTransformationMatrix(Node[,] values, Frame baseFrame, Frame toFrame) : base(values)
         {
             fth = new FrameTransformationHelper(baseFrame, toFrame);
         }

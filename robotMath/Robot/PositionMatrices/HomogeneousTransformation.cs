@@ -4,27 +4,28 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.Robot.FrameUtil;
-using RobotMath.LinearAlgebra;
+using robotMath.Robot.FrameUtil;
+using robotMath.LinearAlgebra;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.PositionMatrices
+namespace robotMath.Robot.PositionMatrices
 {
     public class HomogeneousTransformation : FrameTransformationMatrix
     {
-        public static FrameTransformationVector BottomRowVector = new FrameTransformationVector(new double[,] { { 0, 0, 0, 1 } }, null, null);
-        
+        public static FrameTransformationVector BottomRowVector = new FrameTransformationVector(genNodes(new double[,] { { 0, 0, 0, 1 } }), null, null);
+
         public RotationMatrix RotationMatrix { get; }
         public TranslationVector TranslationVector { get; }
         public HomogeneousTransformation HomogenousMatrix => this;
 
         public HomogeneousTransformation(RotationMatrix rotationMatrix) : this(
-            GenerateHomogenousMatrix(rotationMatrix, new TranslationVector(new double[,] { { 0 }, { 0 }, { 0 } })),
+            GenerateHomogenousMatrix(rotationMatrix, new TranslationVector(genNodes(new double[,] { { 0 }, { 0 }, { 0 } }))),
             rotationMatrix.BaseFrame, rotationMatrix.ToFrame)
         {
         }
 
         public HomogeneousTransformation(TranslationVector translationVector) : this(
-            GenerateHomogenousMatrix(new RotationMatrix(new double[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } }), translationVector),
+            GenerateHomogenousMatrix(new RotationMatrix(genNodes(new double[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } })), translationVector),
             translationVector.BaseFrame, translationVector.ToFrame)
         {
         }
@@ -35,13 +36,14 @@ namespace RobotMath.Robot.PositionMatrices
             {
                 throw new ArgumentException("must be a 4x4 matrix", nameof(values));
             }
-            if (!values.SubMatrix(3, 4, 0, 4).Equals(BottomRowVector))
+            Matrix valuesBottomRow = values.SubMatrix(3, 4, 0, 4).Simplify();
+            if (!valuesBottomRow.Equals(BottomRowVector))
             {
-                throw new ArgumentException("bottom row must be equal to " + BottomRowVector, nameof(values));
+                throw new ArgumentException($"bottom row must be equal to {BottomRowVector}, but is instead {valuesBottomRow}", nameof(values));
             }
             
-            RotationMatrix = new RotationMatrix(SubMatrix(0, 3, 0, 3).Values, BaseFrame, ToFrame);
-            TranslationVector = new TranslationVector(SubMatrix(0, 3, 3, 4).Values, BaseFrame, ToFrame);
+            RotationMatrix = new RotationMatrix(SubMatrix(0, 3, 0, 3), BaseFrame, ToFrame);
+            TranslationVector = new TranslationVector(SubMatrix(0, 3, 3, 4), BaseFrame, ToFrame);
         }
 
         public HomogeneousTransformation(RotationMatrix rotationMatrix, TranslationVector translationVector) :
@@ -66,7 +68,13 @@ namespace RobotMath.Robot.PositionMatrices
 
         public HomogeneousTransformation DotProduct(HomogeneousTransformation other)
         {
-            return new HomogeneousTransformation(base.DotProduct(other), BaseFrame, other.ToFrame);
+            FrameTransformationMatrix newVals = base.DotProduct(other);
+            return new HomogeneousTransformation(newVals, BaseFrame, other.ToFrame);
+        }
+
+        public new HomogeneousTransformation Simplify()
+        {
+            return new HomogeneousTransformation(base.Simplify(), BaseFrame, ToFrame);
         }
 
         /// <summary>
@@ -121,7 +129,7 @@ namespace RobotMath.Robot.PositionMatrices
 
         private static Matrix GenerateHomogenousMatrix(RotationMatrix rotation, TranslationVector translation)
         {
-            double[,] values = new double[4,4];
+            Node[,] values = new Node[4,4];
 
             for (int i = 0; i < 3; i++)
             {
@@ -135,7 +143,10 @@ namespace RobotMath.Robot.PositionMatrices
             values[1, 3] = translation.Y;
             values[2, 3] = translation.Z;
 
-            values[3, 3] = 1;
+            values[3, 0] = SillyParser.GetInstance().m(0);
+            values[3, 1] = SillyParser.GetInstance().m(0);
+            values[3, 2] = SillyParser.GetInstance().m(0);
+            values[3, 3] = SillyParser.GetInstance().m(1);
 
             return new Matrix(values);
         }

@@ -52,6 +52,7 @@
     <Compile Include="Expression\ExpressionTreeHelper.cs" />
     <Compile Include="Expression\GeneratedExpressionParser.cs" />
     <Compile Include="Expression\GeneratedExpressionScanner.cs" />
+    <Compile Include="Expression\SillyParser.cs" />
     <Compile Include="LinearAlgebra\Matrix.cs" />
     <Compile Include="LinearAlgebra\IVector.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformationVector.cs" />

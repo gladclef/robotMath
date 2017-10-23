@@ -3,24 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.Util;
+using robotMath.Util;
+using robotMath.Expression;
 
-namespace RobotMath.LinearAlgebra
+namespace robotMath.LinearAlgebra
 {
     public class Matrix : IPrettyPrint
     {
-        internal readonly double[,] Values;
+        internal readonly Node[,] Values;
 
         public int Rows => Values.GetLength(0);
         public int Cols => Values.GetLength(1);
-        public double this[int a, int b] => Values[a, b];
+        public Node this[int a, int b] => Values[a, b];
 
         /// <summary>
         /// Create a new matrix with the given Values.
         /// </summary>
         /// <param name="values">a Rows x Cols 2D array</param>
         /// <exception cref="ArgumentNullException">If Values is null</exception>
-        public Matrix(double[,] values)
+        public Matrix(Node[,] values)
         {
             if (values == null)
             {
@@ -31,10 +32,10 @@ namespace RobotMath.LinearAlgebra
                 throw new ArgumentException("array dimensions must be greater than 0", nameof(values));
             }
 
-            this.Values = (double[,])values.Clone();
+            this.Values = (Node[,])values.Clone();
         }
 
-        public double Get(int row, int col)
+        public Node Get(int row, int col)
         {
             return this[row, col];
         }
@@ -62,7 +63,7 @@ namespace RobotMath.LinearAlgebra
         {
             DotProductViabilityChecks(other);
 
-            double[,] newValues = new double[this.Rows, other.Cols];
+            Node[,] newValues = new Node[this.Rows, other.Cols];
             for (int row = 0; row < this.Rows; row++)
             {
                 for (int column = 0; column < other.Cols; column++)
@@ -75,12 +76,13 @@ namespace RobotMath.LinearAlgebra
 
         public Matrix Multiply(double scalar)
         {
-            double[,] newValues = new double[Rows, Cols];
+            Parser p = this[0, 0].Tree;
+            Node[,] newValues = new Node[Rows, Cols];
             for (int i = 0; i < Rows; i++)
             {
                 for (int j = 0; j < Cols; j++)
                 {
-                    newValues[i, j] = scalar * this[i, j];
+                    newValues[i, j] = p.m(scalar) * this[i, j];
                 }
             }
             return new Matrix(newValues);
@@ -93,7 +95,7 @@ namespace RobotMath.LinearAlgebra
                 throw new ArgumentOutOfRangeException("must have the same number of rows and columns as this matrix", nameof(other));
             }
 
-            double[,] newValues = new double[Rows, Cols];
+            Node[,] newValues = new Node[Rows, Cols];
             for (int i = 0; i < Rows; i++)
             {
                 for (int j = 0; j < Cols; j++)
@@ -106,7 +108,7 @@ namespace RobotMath.LinearAlgebra
 
         public Matrix Transform()
         {
-            double[,] newValues = new double[Cols, Rows];
+            Node[,] newValues = new Node[Cols, Rows];
             for (int i = 0; i < Rows; i++)
             {
                 for (int j = 0; j < Cols; j++)
@@ -125,12 +127,52 @@ namespace RobotMath.LinearAlgebra
         /// <param name="rowIndex">The row index in the resulting matrix</param>
         /// <param name="columnIndex">The column index in the resulting matrix</param>
         /// <returns></returns>
-        internal static double multiplyAndSum(Matrix a, Matrix b, int rowIndex, int columnIndex)
+        internal static Node multiplyAndSum(Matrix a, Matrix b, int rowIndex, int columnIndex)
         {
-            double retval = 0;
+            Parser p = a[0, 0].Tree;
+            if (p != b[0,0].Tree)
+            {
+                throw new Parser.IncompatibleParserException(p, b[0, 0].Tree);
+            }
+
+            Node retval = null;
             for (int i = 0; i < a.Cols; i++)
             {
-                retval += a[rowIndex, i] * b[i, columnIndex];
+                // val = l * r
+                Node l = a[rowIndex, i];
+                Node r = b[i, columnIndex];
+                Node val;
+                if (l.Tag == NodeTag.literal && Math.Abs(((Leaf)l).Value) < 0.000001)
+                {
+                    val = l;
+                }
+                else if (r.Tag == NodeTag.literal && Math.Abs(((Leaf)r).Value) < 0.000001)
+                {
+                    val = r;
+                }
+                else
+                {
+                    val = a[rowIndex, i] * b[i, columnIndex];
+                }
+
+                // retval += val
+                if (retval == null)
+                {
+                    retval = val;
+                }
+                else if (val.Tag == NodeTag.literal && Math.Abs(((Leaf)val).Value) < 0.000001)
+                {
+                    continue;
+                }
+                else
+                {
+                    retval += val;
+                }
+            }
+
+            if (retval == null)
+            {
+                retval = p.m(0d);
             }
             return retval;
         }
@@ -162,7 +204,7 @@ namespace RobotMath.LinearAlgebra
                 throw new ArgumentOutOfRangeException(nameof(colEnd));
             }
 
-            double[,] values = new double[rowEnd - rowStart, colEnd - colStart];
+            Node[,] values = new Node[rowEnd - rowStart, colEnd - colStart];
             for (int row = rowStart; row < rowEnd; row++)
             {
                 for (int col = colStart; col < colEnd; col++)
@@ -173,14 +215,60 @@ namespace RobotMath.LinearAlgebra
             return new Matrix(values);
         }
 
-        public static Matrix Identity(int size)
+        /// <summary>
+        /// Simplifies all contained expressions that don't contain an unset variable.
+        /// </summary>
+        /// 
+        /// <returns>A new matrix.</returns>
+        public Matrix Simplify()
         {
-            double[,] values = new double[size, size];
+            Node[,] values = new Node[Rows, Cols];
+
+            for (int row = 0; row < Rows; row++)
+            {
+                for (int col = 0; col < Cols; col++)
+                {
+                    values[row, col] = this[row, col].Simplify();
+                }
+            }
+
+            return new Matrix(values);
+        }
+
+        public static Matrix Identity(Parser p, int size)
+        {
+            Node[,] values = new Node[size, size];
             for (int i = 0; i < size; i++)
             {
-                values[i, i] = 1;
+                for (int j = 0; j < size; j++)
+                {
+                    if (i == j)
+                    {
+                        values[i, i] = p.m(1d);
+                    }
+                    else
+                    {
+                        values[i, i] = p.m(0d);
+                    }
+                }
             }
             return new Matrix(values);
+        }
+
+        public static Node[,] genNodes(double[,] vals)
+        {
+            Parser p = SillyParser.GetInstance();
+            Node[,] retval = new Node[vals.GetLength(0), vals.GetLength(1)];
+
+            for (int row = 0; row < vals.GetLength(0); row++)
+            {
+                for (int col = 0; col < vals.GetLength(1); col++)
+                {
+                    retval[row, col] = p.m(vals[row, col]);
+                }
+            }
+
+            return retval;
         }
 
         public override bool Equals(object o)
@@ -199,9 +287,16 @@ namespace RobotMath.LinearAlgebra
             {
                 for (int column = 0; column < Cols; column++)
                 {
-                    if (Math.Abs(this[row, column] - other[row, column]) > 0.000001)
+                    try
                     {
-                        return false;
+                        if (!this[row, column].Equals(other[row, column]))
+                        {
+                            return false;
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        throw new NullReferenceException($"Null value at index [{row}, {column}]'!", e);
                     }
                 }
             }
@@ -238,7 +333,7 @@ namespace RobotMath.LinearAlgebra
             {
                 for (int column = 0; column < Cols; column++)
                 {
-                    valStrs[row, column] = this[row, column].ToString("F2");
+                    valStrs[row, column] = this[row, column].Unparse();
                     columnLengths[column] = Math.Max(columnLengths[column], 3);
                     columnLengths[column] = Math.Max(columnLengths[column], valStrs[row, column].Length);
                 }

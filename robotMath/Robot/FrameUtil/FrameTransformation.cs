@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Data;
 using System.Text;
-using RobotMath.Robot.FrameUtil;
+using robotMath.Robot.FrameUtil;
 
-namespace RobotMath.Robot.FrameUtil
+namespace robotMath.Robot.FrameUtil
 {
     public interface IFrameTransformation
     {

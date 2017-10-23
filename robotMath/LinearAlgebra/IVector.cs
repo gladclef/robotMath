@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using robotMath.Expression;
 
-namespace RobotMath.LinearAlgebra
+namespace robotMath.LinearAlgebra
 {
     public interface IVector
     {
-        double this[int a] { get; }
+        Node this[int a] { get; }
     }
 
     public class VectorHelper : IVector
     {
         Matrix Parent { get; }
-        public double this[int a] => (Parent.Rows == 1 ? Parent[0, a] : Parent[a, 0]);
+        public Node this[int a] => (Parent.Rows == 1 ? Parent[0, a] : Parent[a, 0]);
 
         public VectorHelper(Matrix parent)
         {

@@ -1,4 +1,4 @@
-﻿namespace RobotMath.Robot.PositionMatrices
+﻿namespace robotMath.Robot.PositionMatrices
 {
     public enum RadialDimension
     {

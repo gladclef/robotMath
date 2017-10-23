@@ -34,6 +34,7 @@ namespace robotMath.Expression {
     public partial class Parser
     {
         private AbstractScanner<Object, LexLocation> scanner;
+        public static Parser singleton = null;
 
         internal Dictionary<string, Node> Vars = new Dictionary<string, Node>();
         internal Dictionary<Node, double> VarVals = new Dictionary<Node, double>();
@@ -167,6 +168,7 @@ namespace robotMath.Expression {
                 return Vars[n];
             }
             Leaf retval = new Leaf( this, n );
+            Vars.Add(n, retval);
             VarVals.Add(retval, 0);
             RegisterNode(retval);
             return retval;
@@ -249,6 +251,13 @@ namespace robotMath.Expression {
             {
             }
         }
+
+        public class IncompatibleParserException : Exception
+        {
+            public IncompatibleParserException(Parser a, Parser b) : base ($"Parser {a} and parser {b} must be the same parser in order to compare their internal expressions.")
+            {
+            }
+        }
     }
 
     // ==================================================================================
@@ -262,8 +271,34 @@ namespace robotMath.Expression {
         public Parser Tree { get; }
 
         protected Node(Parser tree, NodeTag tag) { this.Tag = tag; this.Tree = tree; }
-        public abstract double Eval( );
+        public abstract double Eval();
+        public abstract Node Simplify();
         public abstract string Unparse();
+
+        public static Node operator +(Node lhs, Node rhs)
+        {
+            return lhs.Tree.m("+", lhs, rhs);
+        }
+
+        public static Node operator -(Node lhs, Node rhs)
+        {
+            return lhs.Tree.m("-", lhs, rhs);
+        }
+
+        public static Node operator *(Node lhs, Node rhs)
+        {
+            return lhs.Tree.m("*", lhs, rhs);
+        }
+
+        public static Node operator /(Node lhs, Node rhs)
+        {
+            return lhs.Tree.m("/", lhs, rhs);
+        }
+
+        public static Node operator ^(Node lhs, Node rhs)
+        {
+            return lhs.Tree.m("^", lhs, rhs);
+        }
     }
 
     public class Leaf : Node {
@@ -293,11 +328,28 @@ namespace robotMath.Expression {
             return this.Value;
         }
 
+        public override Node Simplify()
+        {
+            if (this.Tag == NodeTag.name)
+            {
+                if (Tree.VarsWithValues.Contains(this))
+                {
+                    return Tree.m(Tree.VarVals[this]);
+                }
+            }
+            return this;
+        }
+
         public override string Unparse() {
             if (Tag == NodeTag.name)
                 return this.Name;
             else
                 return this.Value.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public override string ToString()
+        {
+            return Unparse();
         }
 
         // override object.Equals
@@ -351,20 +403,61 @@ namespace robotMath.Expression {
             }
         }
 
+        public override Node Simplify()
+        {
+            Node newChild = this.Child.Simplify();
+            Node newNode = Tree.MakeUnary(Tag, newChild);
+            if (newChild.Tag.Equals(NodeTag.literal))
+            {
+                return Tree.m(newNode.Eval());
+            }
+            return newNode;
+        }
+
         public override string Unparse()
         {
-            String childVal = this.Child.Unparse();
+            string childVal = this.Child.Unparse();
+            string op = "";
             switch (this.Tag)
             {
                 case NodeTag.negate: return $"-{childVal}";
-                case NodeTag.sin:    return $"sin({childVal}";
-                case NodeTag.cos:    return $"cos({childVal})";
-                case NodeTag.tan:    return $"tan({childVal})";
-                case NodeTag.asin:   return $"asin({childVal})";
-                case NodeTag.acos:   return $"acos({childVal})";
-                case NodeTag.atan:   return $"atan({childVal})";
+                case NodeTag.sin:  op = "sin"; break;
+                case NodeTag.cos:  op = "cos"; break;
+                case NodeTag.tan:  op = "tan"; break;
+                case NodeTag.asin: op = "asin"; break;
+                case NodeTag.acos: op = "acos"; break;
+                case NodeTag.atan: op = "atan"; break;
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
+            return $"{op}({childVal})";
+        }
+
+        public override string ToString()
+        {
+            return Unparse();
+        }
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            Unary o = (Unary)obj;
+            if (this.Tag != o.Tag)
+            {
+                return false;
+            }
+            return this.Child.Equals(o.Child);
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            return Tag.GetHashCode()
+                ^ Child.GetHashCode();
         }
 
         public static NodeTag getTag(string op)
@@ -406,21 +499,123 @@ namespace robotMath.Expression {
             }
         }
 
-        public override string Unparse() {
+        public override Node Simplify()
+        {
+            Node newLhs = lhs.Simplify();
+            Node newRhs = rhs.Simplify();
+            Node newNode = Tree.MakeBinary(Tag, newLhs, newRhs);
+            if (newLhs.Tag.Equals(NodeTag.literal))
+            {
+                if (newRhs.Tag.Equals(NodeTag.literal))
+                {
+                    return Tree.m(newNode.Eval());
+                }
+                bool isZero = Math.Abs(((Leaf)newLhs).Value) < 0.0000001;
+                bool isOne = Math.Abs(1d - ((Leaf)newLhs).Value) < 0.0000001;
+                if (isZero && (Tag.Equals(NodeTag.plus) || (Tag.Equals(NodeTag.minus))))
+                {
+                    return newRhs;
+                }
+                if (isZero && Tag.Equals(NodeTag.div))
+                {
+                    return newLhs;
+                }
+                if (isOne && Tag.Equals(NodeTag.mul))
+                {
+                    return newRhs;
+                }
+            }
+            else if (newRhs.Tag.Equals(NodeTag.literal))
+            {
+                bool isZero = Math.Abs(((Leaf)newRhs).Value) < 0.0000001;
+                bool isOne = Math.Abs(1d - ((Leaf)newRhs).Value) < 0.0000001;
+                if (isZero && (Tag.Equals(NodeTag.plus) || (Tag.Equals(NodeTag.minus))))
+                {
+                    return newLhs;
+                }
+                if (isZero && Tag.Equals(NodeTag.div))
+                {
+                    return Tree.m(Double.NaN);
+                }
+                if (isOne && (Tag.Equals(NodeTag.mul)
+                              || (Tag.Equals(NodeTag.remainder))
+                              || (Tag.Equals(NodeTag.exp))))
+                {
+                    return newLhs;
+                }
+            }
+            return newNode;
+        }
+
+        public override string Unparse()
+        {
             string op = "";
-            String lVal = this.lhs.Unparse();
-            String rVal = this.rhs.Unparse();
-            switch (this.Tag) {
+            string lVal = this.lhs.Unparse();
+            string rVal = this.rhs.Unparse();
+            switch (this.Tag)
+            {
                 case NodeTag.div:       op = "/"; break;
                 case NodeTag.minus:     op = "-"; break;
                 case NodeTag.plus:      op = "+"; break;
                 case NodeTag.remainder: op = "%"; break;
                 case NodeTag.mul:       op = "*"; break;
                 case NodeTag.exp:       op = "^"; break;
-                case NodeTag.atan2:     return $"atan2({lVal}, {rVal})";
+                case NodeTag.atan2: return $"atan2({lVal}, {rVal})";
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
             return $"({lVal} {op} {rVal})";
+        }
+
+        public bool IsReflexive()
+        {
+            switch (this.Tag)
+            {
+                case NodeTag.div: return false;
+                case NodeTag.minus: return false;
+                case NodeTag.plus: return true;
+                case NodeTag.remainder: return false;
+                case NodeTag.mul: return true;
+                case NodeTag.exp: return false;
+                case NodeTag.atan2: return false;
+                default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
+            }
+        }
+
+        public override string ToString()
+        {
+            return Unparse().Replace(" ", "");
+        }
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            Binary o = (Binary)obj;
+            if (this.Tag != o.Tag)
+            {
+                return false;
+            }
+            if (this.lhs.Equals(o.lhs) && this.rhs.Equals(o.rhs))
+            {
+                return true;
+            }
+            if (IsReflexive() && this.rhs.Equals(o.lhs) && this.rhs.Equals(o.lhs))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            return Tag.GetHashCode()
+                ^ lhs.GetHashCode()
+                ^ rhs.GetHashCode();
         }
 
         public static NodeTag getTag(string op)
@@ -433,6 +628,7 @@ namespace robotMath.Expression {
                 case "%": return NodeTag.remainder;
                 case "*": return NodeTag.mul;
                 case "^": return NodeTag.exp;
+                case "atan2": return NodeTag.atan2;
                 default: throw new Parser.BadOperatorException(op);
             }
         }

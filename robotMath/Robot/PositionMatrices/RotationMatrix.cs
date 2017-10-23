@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Text;
-using RobotMath.Robot.FrameUtil;
-using RobotMath.LinearAlgebra;
+using robotMath.Robot.FrameUtil;
+using robotMath.LinearAlgebra;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.PositionMatrices
+namespace robotMath.Robot.PositionMatrices
 {
     public class RotationMatrix : FrameTransformationMatrix
     {
-        public RotationMatrix(double[,] values) : this(values, null, null)
+        public RotationMatrix(Node[,] values) : this(values, null, null)
         {
         }
 
-        public RotationMatrix(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
+        public RotationMatrix(Node[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
             if (values.GetLength(0) != 3 || values.GetLength(1) != 3)
             {
@@ -52,7 +53,12 @@ namespace RobotMath.Robot.PositionMatrices
             return new RotationMatrix(result.Values);
         }
 
-        internal static double[,] BuildRotationMatrix(CartesianDimension dimension, double radians)
+        public new RotationMatrix Simplify()
+        {
+            return new RotationMatrix(base.Simplify(), BaseFrame, ToFrame);
+        }
+
+        internal static Node[,] BuildRotationMatrix(CartesianDimension dimension, double radians)
         {
             double cos = Math.Cos(radians);
             double sin = Math.Sin(radians);
@@ -60,26 +66,26 @@ namespace RobotMath.Robot.PositionMatrices
             switch (dimension)
             {
                 case CartesianDimension.X:
-                    return new double[,]
+                    return genNodes(new double[,]
                     {
                         {1, 0, 0},
                         {0, cos, -sin},
                         {0, sin, cos}
-                    };
+                    });
                 case CartesianDimension.Y:
-                    return new double[,]
+                    return genNodes(new double[,]
                     {
                         {cos, 0, sin},
                         {0, 1, 0},
                         {-sin, 0, cos}
-                    };
+                    });
                 case CartesianDimension.Z:
-                    return new double[,]
+                    return genNodes(new double[,]
                     {
                         {cos, -sin, 0},
                         {sin, cos, 0},
                         {0, 0, 1}
-                    };
+                    });
                 default:
                     return null;
             }

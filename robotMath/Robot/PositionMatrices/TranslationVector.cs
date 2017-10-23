@@ -1,8 +1,9 @@
 ﻿using System;
-using RobotMath.Robot.FrameUtil;
-using RobotMath.LinearAlgebra;
+using robotMath.Robot.FrameUtil;
+using robotMath.LinearAlgebra;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.PositionMatrices
+namespace robotMath.Robot.PositionMatrices
 {
     public class TranslationVector : FrameTransformationPosition
     {
@@ -18,11 +19,11 @@ namespace RobotMath.Robot.PositionMatrices
         {
         }
 
-        public TranslationVector(double[,] values) : this(values, null, null)
+        public TranslationVector(Node[,] values) : this(values, null, null)
         {
         }
 
-        public TranslationVector(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
+        public TranslationVector(Node[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
         }
 

@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RobotMath.Util;
-using RobotMath.LinearAlgebra;
-using RobotMath.Robot.PositionMatrices;
+using robotMath.Util;
+using robotMath.LinearAlgebra;
+using robotMath.Robot.PositionMatrices;
+using robotMath.Expression;
 
-namespace RobotMath.Robot.FrameUtil
+namespace robotMath.Robot.FrameUtil
 {
     public class FrameTransformationPosition : FrameTransformationVector, IPosition
     {
-        public double X => this[0];
-        public double Y => this[1];
-        public double Z => this[2];
+        public Node X => this[0];
+        public Node Y => this[1];
+        public Node Z => this[2];
 
-        public FrameTransformationPosition(double[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
+        public FrameTransformationPosition(Node[,] values, Frame baseFrame, Frame toFrame) : base(values, baseFrame, toFrame)
         {
             CheckValidDimensions(values.GetLength(0), values.GetLength(1));
         }
