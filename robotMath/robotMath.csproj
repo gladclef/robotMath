@@ -55,6 +55,8 @@
     <Compile Include="Expression\SillyParser.cs" />
     <Compile Include="LinearAlgebra\Matrix.cs" />
     <Compile Include="LinearAlgebra\IVector.cs" />
+    <Compile Include="Robot\DenavitHartenbergTable.cs" />
+    <Compile Include="Robot\FrameUtil\FrameRegistry.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformationVector.cs" />
     <Compile Include="Robot\FrameUtil\FrameTransformationPosition.cs" />
     <Compile Include="Robot\PositionMatrices\CartesianDimension.cs" />

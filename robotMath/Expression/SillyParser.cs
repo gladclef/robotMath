@@ -18,7 +18,7 @@ namespace robotMath.Expression
         {
             if (singleton == null)
             {
-                singleton = new Parser(null);
+                singleton = new SillyParser(null);
             }
             return singleton;
         }
@@ -143,7 +143,11 @@ namespace robotMath.Expression
                     case ')':
                         next += curr;
                         parenCount--;
-                        closedExpr = true;
+                        closedExpr = (parenCount == 0);
+                        if (parenCount < 0)
+                        {
+                            throw new ArgumentException($"Unballanced parenthesis ')' at index '{i}' in '{val}'!");
+                        }
                         break;
                     case ' ':
                     case '\t':
@@ -174,6 +178,11 @@ namespace robotMath.Expression
             // catch any straggling values
             next = next.Trim();
             retval.Add(interpretNode(next));
+
+            if (parenCount > 0)
+            {
+                throw new ArgumentException($"Unballanced parenthesis, found {parenCount} extra '(' in '{val}'!");
+            }
 
             return retval.ToArray();
         }

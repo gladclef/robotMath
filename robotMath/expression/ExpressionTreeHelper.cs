@@ -61,6 +61,25 @@ namespace robotMath.Expression {
             Root = node;
         }
 
+        public void SetVar(string name, double value)
+        {
+            if (!Vars.ContainsKey(name))
+            {
+                throw new ArgumentException($"Cannot set value of variable '{name}' to '{value}'. There is no such variable!");
+            }
+            Node var = Vars[name];
+            if (!VarsWithValues.Contains(var))
+            {
+                VarsWithValues.Add(var);
+                VarVals.Add(var, value);
+            }
+            else
+            {
+                VarVals.Remove(var);
+                VarVals.Add(var, value);
+            }
+        }
+
         // ==================================================================================
         // Helper Methods
         // ==================================================================================
@@ -272,7 +291,6 @@ namespace robotMath.Expression {
 
         protected Node(Parser tree, NodeTag tag) { this.Tag = tag; this.Tree = tree; }
         public abstract double Eval();
-        public abstract Node Simplify();
         public abstract string Unparse();
 
         public static Node operator +(Node lhs, Node rhs)
@@ -299,6 +317,23 @@ namespace robotMath.Expression {
         {
             return lhs.Tree.m("^", lhs, rhs);
         }
+
+        public Node Simplify()
+        {
+            string current = Unparse();
+            Node newNode;
+            bool change;
+            do
+            {
+                newNode = SimplifyNode();
+                string next = newNode.Unparse();
+                change = !current.Equals(next);
+                current = next;
+            } while (change);
+            return newNode;
+        }
+
+        protected abstract Node SimplifyNode();
     }
 
     public class Leaf : Node {
@@ -328,7 +363,7 @@ namespace robotMath.Expression {
             return this.Value;
         }
 
-        public override Node Simplify()
+        protected override Node SimplifyNode()
         {
             if (this.Tag == NodeTag.name)
             {
@@ -403,7 +438,7 @@ namespace robotMath.Expression {
             }
         }
 
-        public override Node Simplify()
+        protected override Node SimplifyNode()
         {
             Node newChild = this.Child.Simplify();
             Node newNode = Tree.MakeUnary(Tag, newChild);
@@ -499,7 +534,7 @@ namespace robotMath.Expression {
             }
         }
 
-        public override Node Simplify()
+        protected override Node SimplifyNode()
         {
             Node newLhs = lhs.Simplify();
             Node newRhs = rhs.Simplify();
@@ -516,7 +551,7 @@ namespace robotMath.Expression {
                 {
                     return newRhs;
                 }
-                if (isZero && Tag.Equals(NodeTag.div))
+                if (isZero && (Tag.Equals(NodeTag.mul) || (Tag.Equals(NodeTag.div))))
                 {
                     return newLhs;
                 }
@@ -532,6 +567,10 @@ namespace robotMath.Expression {
                 if (isZero && (Tag.Equals(NodeTag.plus) || (Tag.Equals(NodeTag.minus))))
                 {
                     return newLhs;
+                }
+                if (isZero && Tag.Equals(NodeTag.mul))
+                {
+                    return newRhs;
                 }
                 if (isZero && Tag.Equals(NodeTag.div))
                 {

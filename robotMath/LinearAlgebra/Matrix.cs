@@ -35,6 +35,10 @@ namespace robotMath.LinearAlgebra
             this.Values = (Node[,])values.Clone();
         }
 
+        public Matrix(Matrix values) : this(values.Values)
+        {
+        }
+
         public Node Get(int row, int col)
         {
             return this[row, col];
