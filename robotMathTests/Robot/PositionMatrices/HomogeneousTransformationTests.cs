@@ -25,7 +25,7 @@ namespace robotMath.Robot.PositionMatrices
             expectedOrigin.Equals(result.RotationMatrix);
             result = result.Simplify();
             Assert.AreEqual(expectedOrigin, result.TranslationVector);
-            Assert.AreEqual(new HomogeneousTransformation(expectedRotation, expectedOrigin).Simplify(), result);
+            Assert.AreEqual(new HomogeneousTransformation(expectedRotation, expectedOrigin), result);
         }
     }
 }

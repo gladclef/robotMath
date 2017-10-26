@@ -17,27 +17,27 @@ namespace robotMath.Tests
         public void MainTest()
         {
             SillyParser p = new SillyParser(null);
-            Matrix A_0_1 = p.interpretMatrix(
+            Matrix A_0_1 = p.InterpretMatrix(
                 "cos(t1),-sin(t1), 0, 0;" +
                 "sin(t1),cos(t1),  0, 0;" +
                 "0,      0,        1, d1;" +
                 "0,      0,        0, 1");
-            Matrix A_1_2 = p.interpretMatrix(
+            Matrix A_1_2 = p.InterpretMatrix(
                 "0,  0,  1, 0;" +
                 "-1, 0,  0, 0;" +
                 "0,  -1, 0, d2;" +
                 "0,  0,  0, 1");
-            Matrix A_2_3 = p.interpretMatrix(
+            Matrix A_2_3 = p.InterpretMatrix(
                 "0, -1, 0, 0;" +
                 "1, 0,  0, 0;" +
                 "0, 0,  1, d3;" +
                 "0, 0,  0, 1");
-            Matrix A_1_3 = p.interpretMatrix(
+            Matrix A_1_3 = p.InterpretMatrix(
                 "0,  0, 1, d3;" +
                 "0,  1, 0, 0;" +
                 "-1, 0, 0, d2;" +
                 "0,  0, 0, 1");
-            Matrix A_0_3 = p.interpretMatrix(
+            Matrix A_0_3 = p.InterpretMatrix(
                 "0,  -sin(t1), cos(t1), *(d3,cos(t1));" +
                 "0,  cos(t1),  sin(t1), *(d3,sin(t1));" +
                 "-1, 0,        0,       +(d1,d2);" +

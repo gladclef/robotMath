@@ -405,7 +405,7 @@ namespace robotMath.Expression {
             {
                 return this.Name.Equals(o.Name);
             }
-            return Math.Abs(this.Value - o.Value) < 0.0000001;
+            return Math.Abs(this.Value - o.Value) < 0.000001;
         }
 
         // override object.GetHashCode
@@ -545,8 +545,8 @@ namespace robotMath.Expression {
                 {
                     return Tree.m(newNode.Eval());
                 }
-                bool isZero = Math.Abs(((Leaf)newLhs).Value) < 0.0000001;
-                bool isOne = Math.Abs(1d - ((Leaf)newLhs).Value) < 0.0000001;
+                bool isZero = Math.Abs(((Leaf)newLhs).Value) < 0.000001;
+                bool isOne = Math.Abs(1d - ((Leaf)newLhs).Value) < 0.000001;
                 if (isZero && (Tag.Equals(NodeTag.plus) || (Tag.Equals(NodeTag.minus))))
                 {
                     return newRhs;
@@ -562,8 +562,8 @@ namespace robotMath.Expression {
             }
             else if (newRhs.Tag.Equals(NodeTag.literal))
             {
-                bool isZero = Math.Abs(((Leaf)newRhs).Value) < 0.0000001;
-                bool isOne = Math.Abs(1d - ((Leaf)newRhs).Value) < 0.0000001;
+                bool isZero = Math.Abs(((Leaf)newRhs).Value) < 0.000001;
+                bool isOne = Math.Abs(1d - ((Leaf)newRhs).Value) < 0.000001;
                 if (isZero && (Tag.Equals(NodeTag.plus) || (Tag.Equals(NodeTag.minus))))
                 {
                     return newLhs;

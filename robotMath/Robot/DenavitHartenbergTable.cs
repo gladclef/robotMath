@@ -18,25 +18,25 @@ namespace robotMath.Robot
 
         public HomogeneousTransformation[] IntermediateHomogeneousTransformations()
         {
-            HomogeneousTransformation[] retval = new HomogeneousTransformation[Rows - 1];
+            HomogeneousTransformation[] retval = new HomogeneousTransformation[Rows];
             SillyParser p = (SillyParser) SillyParser.GetInstance();
 
-            for (int i = 1; i < Rows; i++)
+            for (int i = 0; i < Rows; i++)
             {
                 string matrixStr =
                     $"cos(_th{i}), *(-sin(_th{i}),cos(_al{i})), *(sin(_th{i}),sin(_al{i})),  *(_a{i},cos(_th{i}));" +
                     $"sin(_th{i}), *(cos(_th{i}),cos(_al{i})),  *(-cos(_th{i}),sin(_al{i})), *(_a{i},sin(_th{i}));" +
                     $"0,           sin(_al{i}),                 cos(_al{i}),                 _d{i};" +
                     $"0,           0,                           0,                           1";
-                matrixStr = matrixStr.Replace($"_a{i}",  this[i - 1, 0].Unparse());
-                matrixStr = matrixStr.Replace($"_al{i}", this[i - 1, 1].Unparse());
-                matrixStr = matrixStr.Replace($"_d{i}",  this[i - 1, 2].Unparse());
-                matrixStr = matrixStr.Replace($"_th{i}", this[i - 1, 3].Unparse());
-                Matrix vals = p.interpretMatrix(matrixStr).Simplify();
+                matrixStr = matrixStr.Replace($"_a{i}",  this[i, 0].Unparse());
+                matrixStr = matrixStr.Replace($"_al{i}", this[i, 1].Unparse());
+                matrixStr = matrixStr.Replace($"_d{i}",  this[i, 2].Unparse());
+                matrixStr = matrixStr.Replace($"_th{i}", this[i, 3].Unparse());
+                Matrix vals = p.InterpretMatrix(matrixStr);
 
-                Frame baseFrame = FrameRegistry.GetFrame($"{i - 1}");
-                Frame toFrame = FrameRegistry.GetFrame($"{i}");
-                retval[i - 1] = new HomogeneousTransformation(vals, baseFrame, toFrame);
+                Frame baseFrame = FrameRegistry.GetFrame($"{i}");
+                Frame toFrame = FrameRegistry.GetFrame($"{i + 1}");
+                retval[i] = new HomogeneousTransformation(vals, baseFrame, toFrame);
             }
 
             return retval;
