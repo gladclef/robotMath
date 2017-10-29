@@ -11,9 +11,11 @@ namespace robotMath.Expression
 {
     public class SillyParser : Parser
     {
+        public enum Token { name, exprChar, num, paren, other, parenOp };
         public static Regex NameMatcher = new Regex("^[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase);
         public static Regex ExprCharMatcher = new Regex("^[@!#$%^&*|/\\-+~]");
-        public static Regex NumberMatcher = new Regex("^-?([0-9]*[,\\.][0-9]+|[0-9]+)");
+        public static Regex NumberMatcher = new Regex("^([0-9]*[,\\.][0-9]+|[0-9]+)");
+        public static Regex OpenParen = new Regex("^\\(");
 
         public SillyParser(AbstractScanner<Object, LexLocation> scanner) : base (scanner)
         {
@@ -85,26 +87,24 @@ namespace robotMath.Expression
             }
             catch (FormatException) { }
 
-            // check for negation
-            if (val[0] == '-') // "-a"
-            {
-                return m("-", InterpretNode(val.Substring(1)));
-            }
-
             // try to interpret as an operator
-            if (!val.Contains('(')) // "a*b"
+            if (!val.Contains('(') && !val.Contains(',')) // "a*b"
             {
-                Node matchedNode = InterpretUnaryOrBinaryMatch(inval, val);
-                if (matchedNode != null)
+                List<string> testSplits = SplitOnRecognizedCharGroups(val, 2);
+                if (testSplits.Count > 1)
                 {
-                    return matchedNode;
+                    Node matchedNode = InterpretUnaryOrBinaryMatch(inval, val);
+                    if (matchedNode != null)
+                    {
+                        return matchedNode;
+                    }
                 }
 
                 // interpret as a variable
                 return m(val);
             }
 
-            // it must be a parenthetical
+            // it must contain a parenthetical somewhere
             string[] parts = val.Split(new char[] { '(' }, 2);
             if (parts.Length != 2)
             {
@@ -124,7 +124,7 @@ namespace robotMath.Expression
             List<string> nvals = SplitOnRecognizedCharGroups(beforeParen, 2);
             if (nvals.Count > 1)
             {
-                return InterpretBinaryMatch(inval, val);
+                return InterpretUnaryOrBinaryMatch(inval, val);
             }
 
             // interpret as binary or unary expression
@@ -156,7 +156,7 @@ namespace robotMath.Expression
             {
                 try
                 {
-                    result = InterpretBinaryMatch(afterParenExpr, afterParenExpr, result);
+                    result = InterpretUnaryOrBinaryMatch(afterParenExpr, afterParenExpr, result);
                 }
                 catch (FormatException e)
                 {
@@ -166,125 +166,172 @@ namespace robotMath.Expression
             return result;
         }
 
-        private Node InterpretUnaryOrBinaryMatch(string inval, string val)
-        {
-            string partialInval = inval.Trim();
-            List<string> nvals = SplitOnRecognizedCharGroups(val, 3);
-
-            // try to interpret as single expression if only one match is found
-            if (nvals.Count == 1)
-            {
-                return m(nvals[0]);
-            }
-
-            // prepare error string
-            int partialLength = nvals[0].Length;
-            partialLength = inval.IndexOf(nvals[1], partialLength) + nvals[1].Length;
-            string errStr = inval.Substring(0, partialLength);
-            if (nvals.Count > 2)
-            {
-                partialLength = partialInval.IndexOf(nvals[2], partialLength) + nvals[2].Length;
-            }
-
-            // try to interpret recognized character groups
-
-            // interpret as binary expression?
-            if (nvals.Count > 2)
-            {
-                return m(nvals[1], InterpretNode(nvals[0]), InterpretNode(nvals[2]));
-            }
-
-            // interpret as unary expression?
-            try
-            {
-                string remaining = (nvals.Count > 2) ? nvals[1] + nvals[2] : nvals[1];
-                return m(nvals[0], InterpretNode(remaining));
-            }
-            catch (Exception e)
-            {
-                if (e is BadOperatorException || e is FormatException)
-                {
-                    throw new FormatException(
-                        $"Expected binary or unary expression but instead found '{partialInval.Substring(0, partialLength)}'!",
-                        e);
-                }
-                throw e;
-            }
-        }
-
-        private static List<string> SplitOnRecognizedCharGroups(string val, int maxMatches)
+        /// <summary>
+        /// Splits on names, operators, and numbers.
+        /// If a name is followed immediately by a parenthesis group, the two are returned as one string.
+        /// If a minus sign "-" is followed immediately by a number and preceded by either
+        ///   nothing or another operator char, then the minus sign and number are returned as one string.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="maxMatches"></param>
+        /// <returns></returns>
+        private List<string> SplitOnRecognizedCharGroups(string val, int maxMatches)
         {
             // split into recognized character groups
             List<string> nvals = new List<string>();
             nvals.Add(val.Replace(" ", ""));
 
             maxMatches = Math.Max(maxMatches, 2);
-            for (int i = 0; i < nvals.Count && i < maxMatches - 1; i++)
+            MatchCollection nameMatch, exprCharMatch, numberMatch, openParenMatch;
+            List<Token> history = new List<Token>();
+            for (int i = 0; i < nvals.Count && i < maxMatches; i++)
             {
                 string currVal = nvals[i];
                 MatchCollection match;
-                if ((match = NameMatcher.Matches(currVal)).Count > 0 ||
-                    (match = ExprCharMatcher.Matches(currVal)).Count > 0 ||
-                    (match = NumberMatcher.Matches(currVal)).Count > 0)
+                bool isName = (nameMatch = NameMatcher.Matches(currVal)).Count > 0;
+                bool isExprChar = (exprCharMatch = ExprCharMatcher.Matches(currVal)).Count > 0;
+                bool isNum = (numberMatch = NumberMatcher.Matches(currVal)).Count > 0;
+                bool isParen = (openParenMatch = OpenParen.Matches(currVal)).Count > 0;
+                if (isName || isExprChar || isNum || isParen)
                 {
-                    string matchStr = match[0].Value;
-                    nvals.RemoveAt(i);
-                    nvals.Add(matchStr);
-                    if (matchStr.Length < currVal.Length)
+                    Token token = (isName) ? Token.name :
+                                  (isExprChar) ? Token.exprChar :
+                                  (isNum) ? Token.num :
+                                  Token.paren;
+                    string matchStr = (isName) ? nameMatch[0].Value :
+                                      (isExprChar) ? exprCharMatch[0].Value :
+                                      (isNum) ? numberMatch[0].Value :
+                                      openParenMatch[0].Value;
+
+                    if (isParen && i > 0 && history[i - 1].Equals(Token.name))
+                    {
+                        // special case ^..."name("
+                        matchStr = FindBallancedParens(currVal);
+                        nvals[i - 1] += matchStr;
+                        token = Token.parenOp;
+                        i--;
+                    }
+                    else if (i > 0 && nvals[i - 1].Equals("-") &&
+                             ( i == 1 || (i > 1 && history[i-2].Equals(Token.exprChar)) ) )
+                    {
+                        // special case ^..."*-1" or ^"-1"
+                        nvals[i - 1] += matchStr;
+                        i--;
+                    }
+                    else
+                    {
+                        // name, special symbol, number, or paren group
+                        if (isParen)
+                        {
+                            matchStr = FindBallancedParens(currVal);
+                        }
+                        nvals.Insert(i, matchStr);
+                    }
+
+                    nvals.RemoveAt(i+1);
+                    if (!currVal.Equals(matchStr))
                     {
                         nvals.Add(currVal.Substring(matchStr.Length));
                     }
+                    history = history.GetRange(0, i);
+                    history.Add(token);
                 }
             }
 
             return nvals;
         }
 
-        private Node InterpretBinaryMatch(string inval, string val)
+        /// <summary>
+        /// Finds one or more unary/binary matches in the given val.
+        /// </summary>
+        /// <param name="inval"></param>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        private Node InterpretUnaryOrBinaryMatch(string inval, string val)
         {
-            List<string> nvals = SplitOnRecognizedCharGroups(val, 1);
-            string rest = val.Substring(nvals[0].Length);
-            return InterpretBinaryMatch(rest, rest, InterpretNode(nvals[0]));
+            List<string> nvals = SplitOnRecognizedCharGroups(val, 10000);
+            Node firstVal = InterpretNode(nvals[0]);
+            nvals = nvals.GetRange(1, nvals.Count - 1);
+            while (nvals.Count > 1)
+            {
+                firstVal = InterpretBinaryMatch(inval, nvals, 0, firstVal);
+            }
+            return firstVal;
         }
 
-        private Node InterpretBinaryMatch(string inval, string val, Node firstVal)
+        /// <summary>
+        /// Finds one or more unary/binary matches in the given val and with the given firstVal node.
+        /// </summary>
+        /// <param name="inval"></param>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        private Node InterpretUnaryOrBinaryMatch(string inval, string val, Node firstVal)
         {
-            return InterpretBinaryMatch(inval, SplitOnRecognizedCharGroups(val, 2), firstVal);
+            List<String> nvals = SplitOnRecognizedCharGroups(val, 10000);
+            while (nvals.Count > 1)
+            {
+                firstVal = InterpretBinaryMatch(inval, nvals, 0, firstVal);
+            }
+            return firstVal;
         }
 
-        private Node InterpretBinaryMatch(string inval, List<string> nvals, Node firstVal)
+        /// <summary>
+        /// Finds one or more binary matches in the given nvals and with the given firstVal node.
+        /// </summary>
+        /// <param name="inval"></param>
+        /// <param name="nvals">Length of 2+. Any values used by this method are removed.</param>
+        /// <param name="firstVal"></param>
+        /// <returns></returns>
+        private Node InterpretBinaryMatch(string inval, List<string> nvals, int startIndex, Node firstVal)
         {
             inval = inval.Trim();
             string errStr = firstVal.Unparse() + inval;
 
-            // try to interpret recognized character groups
-            if (nvals.Count > 1)
+            // check: is either unary, binary, or invalid
+            if (nvals.Count <= startIndex + 1)
             {
-                // interpret as binary expression?
-                try
-                {
-                    return m(nvals[0], firstVal, InterpretNode(nvals[1]));
-                }
-                catch (Exception e)
-                {
-                    if (e is BadOperatorException || e is FormatException)
-                    {
-                        throw new FormatException(
-                            $"Expected binary or unary expression but instead found '{errStr}'!",
-                            e);
-                    }
-                    throw e;
-                }
+                throw new FormatException($"Can't parse '{errStr}' as a binary expression!");
+            }
+            string op = nvals[startIndex];
+
+            // Change the order based on operator precident.
+            // More values will be interpretted as long as the following operators have a higher precidence than the operator at nvals[0].
+            // No more than nvals.Count - 1 values will be interpretted (aka the first value will never be touched).
+            Node secondVal = InterpretNode(nvals[startIndex + 1]);
+            while (nvals.Count > startIndex + 2 && ComparePrecident(op, nvals[startIndex + 2]) > 0)
+            {
+                secondVal = InterpretBinaryMatch(inval, nvals, startIndex + 2, secondVal);
             }
 
-            throw new FormatException($"Can't parse '{errStr}' as a binary expression!");
+            // interpret the first value and secondVal as a binary expression
+            try
+            {
+                nvals.RemoveAt(startIndex);
+                nvals.RemoveAt(startIndex);
+                return m(op, firstVal, secondVal);
+            }
+            catch (Exception e)
+            {
+                if (e is BadOperatorException || e is FormatException)
+                {
+                    throw new FormatException(
+                        $"Expected binary or unary expression but instead found '{errStr}'!",
+                        e);
+                }
+                throw e;
+            }
         }
 
+        /// <summary>
+        /// Interprets a comma-delimited list of nodes.
+        /// Parenthesis ballancing is observed via FindBallancedParens(string).
+        /// </summary>
+        /// <param name="val">A string containing 0 or more commas.</param>
+        /// <returns></returns>
         public Node[] InterpretListOfNodes(string val)
         {
             List<Node> retval = new List<Node>();
-
-            bool justClosedParens = false;
+            
             string next = "";
             for (int i = 0; i < val.Length; i++)
             {
@@ -292,7 +339,6 @@ namespace robotMath.Expression
                 switch (curr)
                 {
                     case '(':
-                        if (justClosedParens) throw new FormatException($"Expected ',' or EOL after '{next}', but found '{curr}'!");
                         string sub;
                         try
                         {
@@ -303,7 +349,6 @@ namespace robotMath.Expression
                             throw new FormatException($"Error in ballancing parenthesis in '{val}'!", e);
                         }
                         next += sub;
-                        justClosedParens = true;
                         i += sub.Length - 1;
                         break;
                     case ')':
@@ -319,7 +364,6 @@ namespace robotMath.Expression
                         {
                             retval.Add(InterpretNode(next));
                         }
-                        justClosedParens = false;
                         next = "";
                         break;
                     default:
@@ -331,12 +375,25 @@ namespace robotMath.Expression
             // catch any straggling values
             if (next.Length > 0)
             {
-                retval.Add(InterpretNode(next));
+                List<string> nvals = SplitOnRecognizedCharGroups(next, 2);
+                if (nvals.Count > 1)
+                {
+                    retval.Add(InterpretUnaryOrBinaryMatch(val, next));
+                }
+                else
+                {
+                    retval.Add(InterpretNode(next));
+                }
             }
 
             return retval.ToArray();
         }
 
+        /// <summary>
+        /// Find the substring containing the next parenthesis group.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
         public string FindBallancedParens(string val)
         {
             int parenCount = 0;

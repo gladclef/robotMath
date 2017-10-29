@@ -89,6 +89,38 @@ namespace robotMath.Expression {
             return ((Scanner) scanner).yytext;
         }
 
+        public int Precident(NodeTag tag)
+        {
+            switch (tag)
+            {
+                case NodeTag.name:      return 4;
+                case NodeTag.literal:   return 4;
+                case NodeTag.plus:      return 1;
+                case NodeTag.minus:     return 1;
+                case NodeTag.mul:       return 2;
+                case NodeTag.div:       return 2;
+                case NodeTag.remainder: return 3;
+                case NodeTag.negate:    return 4;
+                case NodeTag.exp:       return 3;
+                case NodeTag.sin:       return 4;
+                case NodeTag.cos:       return 4;
+                case NodeTag.tan:       return 4;
+                case NodeTag.asin:      return 4;
+                case NodeTag.acos:      return 4;
+                case NodeTag.atan:      return 4;
+                case NodeTag.atan2:     return 4;
+                default:
+                    throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), tag));
+            }
+        }
+
+        public int ComparePrecident(string op1, string op2)
+        {
+            NodeTag firstTag = GetNodeTag(op1);
+            NodeTag secondTag = GetNodeTag(op2);
+            return Precident(secondTag) - Precident(firstTag);
+        }
+
         // ==================================================================================
         // Factory Methods
         // ==================================================================================
@@ -105,8 +137,12 @@ namespace robotMath.Expression {
             return retval;
         }
 
-        public Node MakeBinary(String op, Node lhs, Node rhs)
+        public Node MakeBinary(string op, Node lhs, Node rhs)
         {
+            if (op.Length > 1 && op[0] == '-')
+            {
+                return MakeUnary("-", MakeBinary(op.Substring(1), lhs, rhs));
+            }
             return MakeBinary(Binary.getTag(op), lhs, rhs);
         }
 
@@ -163,6 +199,10 @@ namespace robotMath.Expression {
 
         public Node MakeUnary(string op, Node child)
         {
+            if (op.Length > 1 && op[0] == '-')
+            {
+                return MakeUnary("-", MakeUnary(op.Substring(1), child));
+            }
             return MakeUnary(Unary.getTag(op), child);
         }
 
@@ -182,6 +222,10 @@ namespace robotMath.Expression {
         }
 
         public Node MakeLeaf(string n) {
+            if (n.Length > 1 && n[0] == '-')
+            {
+                return MakeUnary("-", MakeLeaf(n.Substring(1)));
+            }
             if (Vars.ContainsKey(n))
             {
                 return Vars[n];

@@ -301,3 +301,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+robotMath/packages.config
+robotMath/robotMath.csproj
+robotMath/robotMath.csproj
