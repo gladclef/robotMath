@@ -403,7 +403,7 @@ namespace robotMath.LinearAlgebra
 
                     retval.Append(' ');
                     retval.Append(valStrs[row, column]);
-                    retval.Append(' ');
+                    retval.Append(' ', columnLengths[column] - valStrs[row, column].Length);
 
                     if (column == Cols - 1)
                     {
