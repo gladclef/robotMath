@@ -54,8 +54,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Expression\BinaryTests.cs" />
+    <Compile Include="Expression\LeafTests.cs" />
     <Compile Include="Expression\ParserTests.cs" />
     <Compile Include="Expression\SillyParserTests.cs" />
+    <Compile Include="Expression\UnaryTests.cs" />
     <Compile Include="ProgramTests.cs" />
     <Compile Include="Robot\DenavitHartenbergTableTests.cs" />
     <Compile Include="Robot\PositionMatrices\HomogeneousTransformationTests.cs" />

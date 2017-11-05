@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Policy;
 using System.Text;
+using System.Text.RegularExpressions;
 using QUT.Gppg;
 
 namespace robotMath.Expression {
@@ -127,7 +128,7 @@ namespace robotMath.Expression {
 
         public NodeTag GetNodeTag(String op)
         {
-            return Binary.getTag(op);
+            return Binary.GetTag(op);
         }
 
         public Node MakeBinary(NodeTag tag, Node lhs, Node rhs)
@@ -143,7 +144,7 @@ namespace robotMath.Expression {
             {
                 return MakeUnary("-", MakeBinary(op.Substring(1), lhs, rhs));
             }
-            return MakeBinary(Binary.getTag(op), lhs, rhs);
+            return MakeBinary(Binary.GetTag(op), lhs, rhs);
         }
 
         public Node m(string op, double l, double r)
@@ -203,7 +204,7 @@ namespace robotMath.Expression {
             {
                 return MakeUnary("-", MakeUnary(op.Substring(1), child));
             }
-            return MakeUnary(Unary.getTag(op), child);
+            return MakeUnary(Unary.GetTag(op), child);
         }
 
         public Node m(string op, double child)
@@ -232,7 +233,6 @@ namespace robotMath.Expression {
             }
             Leaf retval = new Leaf( this, n );
             Vars.Add(n, retval);
-            VarVals.Add(retval, 0);
             RegisterNode(retval);
             return retval;
         }
@@ -332,8 +332,9 @@ namespace robotMath.Expression {
     public abstract class Node {
         public NodeTag Tag { get;  }
         public Parser Tree { get; }
+        public Boolean IsNegative { get; }
 
-        protected Node(Parser tree, NodeTag tag) { this.Tag = tag; this.Tree = tree; }
+        protected Node(Parser tree, NodeTag tag, Boolean isNegative) { this.Tag = tag; this.Tree = tree; this.IsNegative = isNegative; }
         public abstract double Eval();
         public abstract string Unparse();
 
@@ -378,33 +379,70 @@ namespace robotMath.Expression {
         }
 
         protected abstract Node SimplifyNode();
+
+        protected string NegSign()
+        {
+            if (IsNegative)
+            {
+                return "-";
+            }
+            return "";
+        }
+
+        public abstract Node Negate();
+
+        public bool Equals(Node other)
+        {
+            return this.Tag.Equals(other.Tag) && this.IsNegative.Equals(other.IsNegative);
+        }
     }
 
-    public class Leaf : Node {
-        public String Name { get; }
-        public double Value { get; set; }
+    public class Leaf : Node
+    {
+        public static Regex StartZeroMatcher = new Regex("^0+");
+        public static Regex EndZeroMatcher = new Regex("[0\\.]*(E\\+|E-)?0+$");
 
-        internal Leaf(Parser tree, String name) : base(tree, NodeTag.name)
+        public String Name { get; }
+        public double Value { get; }
+
+        internal Leaf(Parser tree, String name) : this(tree, name, false)
+        {
+        }
+
+        internal Leaf(Parser tree, String name, Boolean isNegative) : base(tree, NodeTag.name, isNegative)
         {
             this.Name = name;
             this.Value = 0;
         }
 
-        internal Leaf(Parser tree, double value) : base(tree, NodeTag.literal)
+        internal Leaf(Parser tree, double value) : this(tree, Math.Abs(value), value < 0)
         {
-            this.Name = "";
-            this.Value = value;
         }
 
-        public override double Eval() {
+        internal Leaf(Parser tree, double value, Boolean isNegative) : base(tree, NodeTag.literal, isNegative)
+        {
+            this.Name = "";
+            this.Value = Math.Abs(value);
+        }
+
+        public override double Eval()
+        {
+            double retval = this.Value;
             if (this.Tag == NodeTag.name)
             {
                 if (!Tree.VarsWithValues.Contains(this))
                 {
                     throw new Parser.NoSetValueException(this.Name);
                 }
+                retval = Tree.VarVals[this];
             }
-            return this.Value;
+
+            // check for negative
+            if (IsNegative)
+            {
+                return -retval;
+            }
+            return retval;
         }
 
         protected override Node SimplifyNode()
@@ -413,22 +451,74 @@ namespace robotMath.Expression {
             {
                 if (Tree.VarsWithValues.Contains(this))
                 {
-                    return Tree.m(Tree.VarVals[this]);
+                    double val = Tree.VarVals[this];
+                    Boolean valIsNeg = IsNegative ^ (val < 0);
+                    return new Leaf(Tree, Math.Abs(val), valIsNeg);
+                }
+            }
+            else
+            {
+                if (Math.Abs(this.Value) < 0.0000001)
+                {
+                    return new Leaf(Tree, 0d, false);
                 }
             }
             return this;
         }
 
+        public override Node Negate()
+        {
+            if (Tag.Equals(NodeTag.name))
+            {
+                return new Leaf(Tree, Name, !IsNegative);
+            }
+            return new Leaf(Tree, Value, !IsNegative);
+        }
+
         public override string Unparse() {
+            // is a variable
             if (Tag == NodeTag.name)
-                return this.Name;
-            else
-                return this.Value.ToString(CultureInfo.CurrentCulture);
+            {
+                return $"{base.NegSign()}{this.Name}";
+            }
+
+            // is a decimal value
+            string retval = Eval().ToString("E4", CultureInfo.CurrentCulture);
+            return TrimZeros(retval);
         }
 
         public override string ToString()
         {
-            return Unparse();
+            // is a variable
+            if (Tag == NodeTag.name)
+            {
+                return this.Name;
+            }
+
+            // is a decimal value
+            string retval = Eval().ToString("F9", CultureInfo.CurrentCulture);
+            return TrimZeros(retval);
+        }
+
+        protected string TrimZeros(string decimalStr)
+        {
+            return RemoveLeadingZeros(RemoveTrailingZeros(decimalStr));
+        }
+
+        protected string RemoveTrailingZeros(string decimalStr)
+        {
+            decimalStr = EndZeroMatcher.Replace(decimalStr, "");
+            decimalStr = (decimalStr.Length == 0) ? "0" : decimalStr;
+            return decimalStr;
+        }
+
+        protected string RemoveLeadingZeros(string decimalStr)
+        {
+            string sign = (decimalStr[0] == '-' || decimalStr[0] == '+') ? Convert.ToString(decimalStr[0]) : "";
+            decimalStr = (sign.Length > 0) ? decimalStr.Substring(1) : decimalStr;
+            decimalStr = StartZeroMatcher.Replace(decimalStr, "");
+            decimalStr = (decimalStr.Length == 0) ? "0" : decimalStr;
+            return sign + decimalStr;
         }
 
         // override object.Equals
@@ -440,7 +530,7 @@ namespace robotMath.Expression {
             }
 
             Leaf o = (Leaf)obj;
-            if (this.Tag != o.Tag)
+            if (!base.Equals(o))
             {
                 return false;
             }
@@ -457,63 +547,92 @@ namespace robotMath.Expression {
         {
             return Tag.GetHashCode()
                 ^ Name.GetHashCode()
-                ^ Value.GetHashCode();
+                ^ Value.GetHashCode()
+                ^ IsNegative.GetHashCode();
         }
     }
 
     public class Unary : Node {
         public Node Child { get; }
-        internal Unary(Parser tree, NodeTag tag, Node child )
-            : base( tree, tag ) { this.Child = child; }
+
+        internal Unary(Parser tree, NodeTag tag, Node child)
+            : this(tree, tag, child, false)
+        {
+        }
+
+        internal Unary(Parser tree, NodeTag tag, Node child, Boolean isNegative)
+            : base(tree, tag, isNegative)
+        {
+            this.Child = child;
+        }
 
         public override double Eval()
         {
             double childVal = this.Child.Eval();
+            double retval = 0;
             switch (this.Tag)
             {
-                case NodeTag.negate: return -childVal;
-                case NodeTag.sin: return Math.Sin(childVal);
-                case NodeTag.cos: return Math.Cos(childVal);
-                case NodeTag.tan: return Math.Tan(childVal);
-                case NodeTag.asin: return Math.Asin(childVal);
-                case NodeTag.acos: return Math.Acos(childVal);
-                case NodeTag.atan: return Math.Atan(childVal);
+                case NodeTag.negate: retval = -childVal; break;
+                case NodeTag.sin: retval = Math.Sin(childVal); break;
+                case NodeTag.cos: retval = Math.Cos(childVal); break;
+                case NodeTag.tan: retval = Math.Tan(childVal); break;
+                case NodeTag.asin: retval = Math.Asin(childVal); break;
+                case NodeTag.acos: retval = Math.Acos(childVal); break;
+                case NodeTag.atan: retval = Math.Atan(childVal); break;
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
+            retval = (IsNegative) ? -retval : retval;
+            return retval;
         }
 
         protected override Node SimplifyNode()
         {
+            // check for negation of a negative
+            if (IsNegative && Tag.Equals(NodeTag.negate))
+            {
+                return Child.Simplify();
+            }
+
+            // simplify
             Node newChild = this.Child.Simplify();
-            Node newNode = Tree.MakeUnary(Tag, newChild);
+            Node newNode = new Unary(Tree, Tag, newChild, IsNegative);
             if (newChild.Tag.Equals(NodeTag.literal))
             {
-                return Tree.m(newNode.Eval());
+                newNode = Tree.m(newNode.Eval()).Simplify();
             }
             return newNode;
         }
 
+        public override Node Negate()
+        {
+            return new Unary(Tree, Tag, Child, !IsNegative);
+        }
+
         public override string Unparse()
         {
-            string childVal = this.Child.Unparse();
+            return ToString(this.Child.Unparse());
+        }
+
+        public override string ToString()
+        {
+            return ToString(this.Child.ToString());
+        }
+
+        public string ToString(string childVal)
+        {
             string op = "";
             switch (this.Tag)
             {
-                case NodeTag.negate: return $"-{childVal}";
-                case NodeTag.sin:  op = "sin"; break;
-                case NodeTag.cos:  op = "cos"; break;
-                case NodeTag.tan:  op = "tan"; break;
+                case NodeTag.negate: return $"{base.NegSign()}-{childVal}";
+                case NodeTag.sin: op = "sin"; break;
+                case NodeTag.cos: op = "cos"; break;
+                case NodeTag.tan: op = "tan"; break;
                 case NodeTag.asin: op = "asin"; break;
                 case NodeTag.acos: op = "acos"; break;
                 case NodeTag.atan: op = "atan"; break;
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
-            return $"{op}({childVal})";
-        }
-
-        public override string ToString()
-        {
-            return Unparse();
+            return $"{base.NegSign()}{op}({childVal})";
         }
 
         // override object.Equals
@@ -525,7 +644,7 @@ namespace robotMath.Expression {
             }
 
             Unary o = (Unary)obj;
-            if (this.Tag != o.Tag)
+            if (!base.Equals(o))
             {
                 return false;
             }
@@ -536,10 +655,11 @@ namespace robotMath.Expression {
         public override int GetHashCode()
         {
             return Tag.GetHashCode()
-                ^ Child.GetHashCode();
+                ^ Child.GetHashCode()
+                ^ IsNegative.GetHashCode();
         }
 
-        public static NodeTag getTag(string op)
+        public static NodeTag GetTag(string op)
         {
             switch (op)
             {
@@ -559,30 +679,66 @@ namespace robotMath.Expression {
         public Node lhs { get; }
         public Node rhs { get; }
 
-        internal Binary(Parser tree, NodeTag tag, Node lhs, Node rhs ) : base( tree, tag ) { 
-            this.lhs = lhs; this.rhs = rhs; 
+        internal Binary(Parser tree, NodeTag tag, Node lhs, Node rhs) : this(tree, tag, lhs, rhs, false)
+        {
+        }
+
+        internal Binary(Parser tree, NodeTag tag, Node lhs, Node rhs, Boolean isNegative) : base(tree, tag, isNegative)
+        {
+            this.lhs = lhs; this.rhs = rhs;
         }
 
         public override double Eval() {
             double lVal = this.lhs.Eval();
             double rVal = this.rhs.Eval();
+            double retval = 0;
             switch (this.Tag) {
-                case NodeTag.div:       return lVal / rVal;
-                case NodeTag.minus:     return lVal - rVal;
-                case NodeTag.plus:      return lVal + rVal;
-                case NodeTag.remainder: return lVal % rVal;
-                case NodeTag.mul:       return lVal * rVal;
-                case NodeTag.exp:       return Math.Pow(lVal, rVal);
-                case NodeTag.atan2:     return Math.Atan2(lVal, rVal);
+                case NodeTag.div:       retval = lVal / rVal; break;
+                case NodeTag.minus:     retval = lVal - rVal; break;
+                case NodeTag.plus:      retval = lVal + rVal; break;
+                case NodeTag.remainder: retval = lVal % rVal; break;
+                case NodeTag.mul:       retval = lVal * rVal; break;
+                case NodeTag.exp:       retval = Math.Pow(lVal, rVal); break;
+                case NodeTag.atan2:     retval = Math.Atan2(lVal, rVal); break;
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
+            retval = (IsNegative) ? -retval : retval;
+            return retval;
         }
 
         protected override Node SimplifyNode()
         {
             Node newLhs = lhs.Simplify();
             Node newRhs = rhs.Simplify();
-            Node newNode = Tree.MakeBinary(Tag, newLhs, newRhs);
+            Node newNode = null;
+
+            // move negative signs inside
+            if (IsNegative)
+            {
+                if (Tag.Equals(NodeTag.minus))
+                {
+                    return new Binary(Tree, Tag, newRhs, newLhs, false).SimplifyNode();
+                }
+                newLhs = newLhs.Negate();
+                newRhs = newRhs.Negate();
+                return new Binary(Tree, Tag, newLhs, newRhs, false).SimplifyNode();
+            }
+
+            // check for multiplication by -1
+            if (Tag.Equals(NodeTag.mul))
+            {
+                if (IsNegativeOne(newLhs as Leaf))
+                {
+                    return newRhs.Negate().Simplify();
+                }
+                if (IsNegativeOne(newRhs as Leaf))
+                {
+                    return newLhs.Negate().Simplify();
+                }
+            }
+
+            // simplify based on identities
+            newNode = new Binary(Tree, Tag, newLhs, newRhs, IsNegative);
             if (newLhs.Tag.Equals(NodeTag.literal))
             {
                 if (newRhs.Tag.Equals(NodeTag.literal))
@@ -630,23 +786,44 @@ namespace robotMath.Expression {
             return newNode;
         }
 
+        private static bool IsNegativeOne(Leaf leaf)
+        {
+            return leaf != null &&
+                   leaf.IsNegative &&
+                   leaf.Tag.Equals(NodeTag.literal) &&
+                   leaf.Value.Equals(1);
+        }
+
+        public override Node Negate()
+        {
+            return new Binary(Tree, Tag, lhs, rhs, !IsNegative);
+        }
+
         public override string Unparse()
         {
+            return ToString(lhs.Unparse(), rhs.Unparse());
+        }
+
+        public override string ToString()
+        {
+            return ToString(lhs.ToString(), rhs.ToString()).Replace(" ", "");
+        }
+
+        public string ToString(string lVal, string rVal)
+        {
             string op = "";
-            string lVal = this.lhs.Unparse();
-            string rVal = this.rhs.Unparse();
             switch (this.Tag)
             {
-                case NodeTag.div:       op = "/"; break;
-                case NodeTag.minus:     op = "-"; break;
-                case NodeTag.plus:      op = "+"; break;
+                case NodeTag.div: op = "/"; break;
+                case NodeTag.minus: op = "-"; break;
+                case NodeTag.plus: op = "+"; break;
                 case NodeTag.remainder: op = "%"; break;
-                case NodeTag.mul:       op = "*"; break;
-                case NodeTag.exp:       op = "^"; break;
+                case NodeTag.mul: op = "*"; break;
+                case NodeTag.exp: op = "^"; break;
                 case NodeTag.atan2: return $"atan2({lVal}, {rVal})";
                 default: throw new Parser.BadOperatorException(Enum.GetName(typeof(NodeTag), Tag));
             }
-            return $"({lVal} {op} {rVal})";
+            return $"{base.NegSign()}({lVal} {op} {rVal})";
         }
 
         public bool IsReflexive()
@@ -664,11 +841,6 @@ namespace robotMath.Expression {
             }
         }
 
-        public override string ToString()
-        {
-            return Unparse().Replace(" ", "");
-        }
-
         // override object.Equals
         public override bool Equals(object obj)
         {
@@ -678,7 +850,7 @@ namespace robotMath.Expression {
             }
 
             Binary o = (Binary)obj;
-            if (this.Tag != o.Tag)
+            if (!base.Equals(o))
             {
                 return false;
             }
@@ -698,10 +870,11 @@ namespace robotMath.Expression {
         {
             return Tag.GetHashCode()
                 ^ lhs.GetHashCode()
-                ^ rhs.GetHashCode();
+                ^ rhs.GetHashCode()
+                ^ IsNegative.GetHashCode();
         }
 
-        public static NodeTag getTag(string op)
+        public static NodeTag GetTag(string op)
         {
             switch (op)
             {

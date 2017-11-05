@@ -79,28 +79,28 @@ namespace robotMath.Robot.Tests
         [TestMethod()]
         public void IntermediateHomogeneousTransformationsTest()
         {
-            double pi = Math.PI;
             SillyParser p = (SillyParser) SillyParser.GetInstance();
             DenavitHartenbergTable table = new DenavitHartenbergTable(p.InterpretMatrix(
                 $"0,  0,         d1,  th1;"      +
-                $"0,  1.5*{pi},  d2,  1.5*{pi};" +
-                $"0,  0,         d3,  0.5*{pi}"  ));
+                $"0,  1.5*PI,  d2,  1.5*PI;" +
+                $"0,  0,         d3,  0.5*PI"  ));
 
             Matrix A_0_1 = p.InterpretMatrix(
                 "cos(th1), -sin(th1), 0, 0;"  +
                 "sin(th1), cos(th1),  0, 0;"  +
                 "0,        0,         1, d1;" +
-                "0,        0,         0, 1"   );
+                "0,        0,         0, 1"   ).Simplify();
             Matrix A_1_2 = p.InterpretMatrix(
                 "0,  0,  1, 0;"  +
                 "-1, 0,  0, 0;"  +
                 "0,  -1, 0, d2;" +
-                "0,  0,  0, 1"   );
+                "0,  0,  0, 1"   ).Simplify();
             Matrix A_2_3 = p.InterpretMatrix(
                 "0, -1, 0, 0;"  +
                 "1, 0,  0, 0;"  +
                 "0, 0,  1, d3;" +
-                "0, 0,  0, 1"   );
+                "0, 0,  0, 1"   ).Simplify();
+            p.SetVar("PI", Math.PI);
 
             HomogeneousTransformation[] HTs = table.IntermediateHomogeneousTransformations();
             Matrix[] HTMs = new Matrix[HTs.Length];
