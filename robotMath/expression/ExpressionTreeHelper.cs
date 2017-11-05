@@ -365,17 +365,7 @@ namespace robotMath.Expression {
 
         public Node Simplify()
         {
-            string current = Unparse();
-            Node newNode;
-            bool change;
-            do
-            {
-                newNode = SimplifyNode();
-                string next = newNode.Unparse();
-                change = !current.Equals(next);
-                current = next;
-            } while (change);
-            return newNode;
+            return SimplifyNode();
         }
 
         protected abstract Node SimplifyNode();
