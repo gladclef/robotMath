@@ -7,11 +7,22 @@ using robotMath.Expression;
 
 namespace robotMath.LinearAlgebra
 {
+    /// <summary>
+    /// The basic vector class interface.
+    /// It is an interface instead of a class because it should be implemented by
+    /// a <see cref="Matrix"/> (or something similar).
+    /// 
+    /// <seealso cref="VectorHelper"/>
+    /// </summary>
     public interface IVector
     {
+        /// <summary>Get the value at the given index of the vector.</summary>
         Node this[int a] { get; }
     }
 
+    /// <summary>
+    /// Class to wrap a <see cref="Matrix"/> to look like a <see cref="IVector"/>.
+    /// </summary>
     public class VectorHelper : IVector
     {
         Matrix Parent { get; }

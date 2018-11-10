@@ -9,6 +9,14 @@ using QUT.Gppg;
 
 namespace robotMath.Expression
 {
+    /// <summary>
+    /// I needed a parser to parse algebraic expressions and the pile of garbage known as
+    /// GPG wasn't working, so I made this silly class.
+    /// TODO make an actual parser with Antl4r
+    /// 
+    /// The mostly use case is simply calling <see cref="InterpretMatrix"/> on an instance
+    /// obtained by <see cref="GetInstance"/>.
+    /// </summary>
     public class SillyParser : Parser
     {
         public enum Token { name, exprChar, num, paren, other, parenOp };
@@ -30,6 +38,15 @@ namespace robotMath.Expression
             return singleton;
         }
 
+        /// <summary>
+        /// Interpret a matrix, where semicolons ";" seperate rows and commas "," seperate columns.
+        /// The cell values can be any sort of expression, including variables.
+        /// The cell values may contain operators that use commas "," eg "add(a, b)".
+        /// The cell values can also use the more standard forms of algebraic expressions eg "a + b".
+        /// 
+        /// Valid operators are:
+        /// <code>plus, minus, mul, div, remainder, negate, exp, sin, cos, tan, asin, acos, atan, atan2</code>
+        /// </summary>
         public Matrix InterpretMatrix(string matrixStr)
         {
             string[] rows = matrixStr.Split(';');

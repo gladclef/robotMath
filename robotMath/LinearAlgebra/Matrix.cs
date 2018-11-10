@@ -8,12 +8,25 @@ using robotMath.Expression;
 
 namespace robotMath.LinearAlgebra
 {
+    /// <summary>
+    /// The basic linear algebra class. Includes the basic matrix operations
+    /// (dot product, scale/multiply, sum, sub matrix).
+    /// 
+    /// The cells of the matrix can be any sort of expression, as represented
+    /// by <see cref="Node"/>s.
+    /// </summary>
     public class Matrix : IPrettyPrint
     {
+        /// <summary>The contained values of the matrix.</summary>
         internal readonly Node[,] Values;
 
+        /// <summary>The rows count.</summary>
         public int Rows => Values.GetLength(0);
+        /// <summary>The columns count.</summary>
         public int Cols => Values.GetLength(1);
+        /// <summary>Get the value at row a, column b.</summary>
+        /// <param name="a">row index</param>
+        /// <param name="b">column index</param>
         public Node this[int a, int b] => Values[a, b];
 
         /// <summary>
@@ -35,18 +48,22 @@ namespace robotMath.LinearAlgebra
             this.Values = (Node[,])values.Clone();
         }
 
+        /// <summary>
+        /// Creates a shallow copy of the given matrix (the node tree for each cell is referenced but not duplicated).
+        /// </summary>
         public Matrix(Matrix values) : this(values.Values)
         {
         }
 
+        /// <summary>
+        /// Get the value at the given row and column.
+        /// <seealso cref="this[int, int]"/>
+        /// </summary>
         public Node Get(int row, int col)
         {
             return this[row, col];
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
+        
         /// <exception cref="ArgumentNullException">If the other matrix is null</exception>
         /// <exception cref="ArgumentException">If the size of the two matrices is incorrect</exception>
         protected void DotProductViabilityChecks(Matrix other)
@@ -61,6 +78,10 @@ namespace robotMath.LinearAlgebra
             }
         }
 
+        /// <summary>
+        /// Performs a dot product against the given matrix.
+        /// </summary>
+        /// <returns>A new matrix with the resultant values.</returns>
         /// <exception cref="ArgumentNullException">If the other matrix is null</exception>
         /// <exception cref="ArgumentException">If the size of the two matrices is incorrect</exception>
         public Matrix DotProduct(Matrix other)
@@ -78,6 +99,11 @@ namespace robotMath.LinearAlgebra
             return new Matrix(newValues);
         }
 
+        /// <summary>
+        /// Performs a scalar multiply against this matrix.
+        /// </summary>
+        /// <param name="scalar">The value to scale this matrix by.</param>
+        /// <returns>A new matrix with the scaled values.</returns>
         public Matrix Multiply(double scalar)
         {
             Parser p = this[0, 0].Tree;
@@ -92,6 +118,13 @@ namespace robotMath.LinearAlgebra
             return new Matrix(newValues);
         }
 
+        /// <summary>
+        /// Adds all values of the other matrix to the values of this matrix.
+        /// Both matricies must have the same number of rows and columns.
+        /// </summary>
+        /// <param name="other">The matrix to add to this matrix.</param>
+        /// <returns>A new matrix with the summed values.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">If the other matrix has an invalid number of rows and columns.</exception>
         public Matrix Sum(Matrix other)
         {
             if (other.Rows != Rows || other.Cols != Cols)
@@ -110,6 +143,11 @@ namespace robotMath.LinearAlgebra
             return new Matrix(newValues);
         }
 
+        /// <summary>
+        /// Swaps the rows and columns of this matrix.
+        /// If it was a NxM matrix before, the returned matrix will be an MxN matrix.
+        /// </summary>
+        /// <returns>A new matrix with the rows and columns swapped.</returns>
         public Matrix Transform()
         {
             Node[,] newValues = new Node[Cols, Rows];
@@ -124,13 +162,18 @@ namespace robotMath.LinearAlgebra
         }
         
         /// <summary>
+        /// Used in the calculation of the <see cref="DotProduct"/>.
         /// 
+        /// Multiplies the values in the b's columnIndex by the values in a's rowIndex,
+        /// for a total of a.Cols multiplications. The multiplied values are then summed
+        /// together, and returned as the new value.
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
+        /// <param name="a">The LHS matrix in the dot product.</param>
+        /// <param name="b">The RHS matrix in the dot product.</param>
         /// <param name="rowIndex">The row index in the resulting matrix</param>
         /// <param name="columnIndex">The column index in the resulting matrix</param>
-        /// <returns></returns>
+        /// <returns>A single new value, to represent the value at (rowIndex,columnIndex)
+        ///          in the resultant matrix of the dot product.</returns>
         internal static Node multiplyAndSum(Matrix a, Matrix b, int rowIndex, int columnIndex)
         {
             Parser p = a[0, 0].Tree;
@@ -183,12 +226,14 @@ namespace robotMath.LinearAlgebra
 
         /// <summary>
         /// Create a new matrix from a part of this matrix.
+        /// The new matrix is a shallow copy of this matrix (the node references are
+        /// copied, but the nodes are not duplicated).
         /// </summary>
         /// <param name="rowStart">inclusive</param>
         /// <param name="rowEnd">exclusive</param>
         /// <param name="colStart">inclusive</param>
         /// <param name="colEnd">exclusive</param>
-        /// <returns></returns>
+        /// <returns>A new matrix with only the partial values.</returns>
         public Matrix SubMatrix(int rowStart, int rowEnd, int colStart, int colEnd)
         {
             if (rowStart < 0 || rowStart >= Rows)
@@ -239,6 +284,14 @@ namespace robotMath.LinearAlgebra
             return new Matrix(values);
         }
 
+        /// <summary>
+        /// Create a square size x size identity matrix.
+        /// 
+        /// <seealso cref="SillyParser.GetInstance"/>
+        /// </summary>
+        /// <param name="p">The <see cref="Node"/> parser to add the new matrix to.</param>
+        /// <param name="size">The dimensions of the matrix.</param>
+        /// <returns>A new matrix, populated all with zeroes except for ones along the diagonal.</returns>
         public static Matrix Identity(Parser p, int size)
         {
             Node[,] values = new Node[size, size];
@@ -259,6 +312,12 @@ namespace robotMath.LinearAlgebra
             return new Matrix(values);
         }
 
+        /// <summary>
+        /// Copies the given values into a new 2D expression array.
+        /// Useful for constructing new 
+        /// </summary>
+        /// <param name="vals">The </param>
+        /// <returns></returns>
         public static Node[,] genNodes(double[,] vals)
         {
             Parser p = SillyParser.GetInstance();
